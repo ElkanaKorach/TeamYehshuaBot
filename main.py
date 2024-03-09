@@ -1,5 +1,6 @@
 from telegram.ext import Updater, MessageHandler, Filters
 import logging
+from datetime import datetime
 
 # Ersetze 'YOUR_TOKEN_HERE' mit dem Token deines Bots
 TOKEN = '6942337491:AAGVKMvHayewt5CUcNFg8xx_zprobgJ4jak'
@@ -15,7 +16,14 @@ logger = logging.getLogger(__name__)
 
 # Handler-Funktion, die bei jeder neuen Nachricht aufgerufen wird
 def echo(update, context):
-    logger.info(f"Nachricht von {update.message.from_user.name}: {update.message.text}")
+    chat_type = update.message.chat.type
+    chat_id = update.message.chat.id
+    user_name = update.message.from_user.name
+    message_text = update.message.text
+    message_date = update.message.date
+    reply_to_message = update.message.chat.location
+
+    logger.info(f"Nachricht von {user_name} im {chat_type} (ID: {chat_id}): '{message_text}', Zeit: {message_date}, {reply_to_message}")
 
 def main():
     # Updater und Dispatcher initialisieren
