@@ -5,6 +5,10 @@ import logging
 TOKEN = '6942337491:AAGVKMvHayewt5CUcNFg8xx_zprobgJ4jak'
 
 # Logging-Konfiguration
+# shellcheck disable=SC1065
+# shellcheck disable=SC1072
+# shellcheck disable=SC1073
+# shellcheck disable=SC1064
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
