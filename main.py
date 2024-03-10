@@ -1,4 +1,4 @@
-from os import name
+import os
 import asyncio
 from telegram import Update, Chat
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
@@ -27,10 +27,11 @@ async def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
     # Füge einen MessageHandler hinzu, der auf alle Textnachrichten reagiert
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+    application.add_handler(MessageHandler(filters.text & (~filters.command), echo))
 
     # Starte den Bot
-    await application.run_polling()
+    task = asyncio.create_task(application.run_polling())
+    await asyncio.gather(task)
 
-if name == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
