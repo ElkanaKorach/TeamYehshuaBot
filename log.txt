@@ -1,0 +1,135 @@
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Frauen, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Frauen, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Männer, Deleted: True
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Frauen, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Männer, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Männer, Deleted: True
+Elkana (ID: 1438346474): Action: nicht gelöscht (Whitelist/Admin), Reason: Nachricht von Whitelist oder Admin, Deleted: False
+Elkana (ID: 1438346474): Action: nicht gelöscht (Whitelist/Admin), Reason: Nachricht von Whitelist oder Admin, Deleted: False
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Frauen, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Frauen, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Frauen, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Andere Themen-ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Andere Themen-ID, Deleted: True, Topic ID: 271
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Andere Themen-ID, Deleted: True, Topic ID: 271
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Andere Themen-ID, Deleted: True, Topic ID: 271
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 272
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 270
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 270
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 270
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 270
+יונתן בן אלכסנדר (ID: 276954529): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: 272
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 270
+יונתן בן אלכסנדר (ID: 276954529): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: 36
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 271
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 272
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 2
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 513
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 270
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 273
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+יונתן בן אלכסנדר (ID: 276954529): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: 271
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 271
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 2
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 271
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Männer, Deleted: True, Topic ID: 271
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True, Topic ID: 2
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True, Topic ID: 2
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: 36
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Männer, Deleted: True, Topic ID: 271
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True, Topic ID: 2
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Allgemeines Thema oder in Whitelist Parascha, Deleted: False, Topic ID: 272
+Elkana (ID: 1438346474): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: 2367
+Elkana (ID: 1438346474): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: 1331
+Elkana (ID: 1438346474): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: 2351
+Bozo (ID: 1627107536): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: 2349
+Elkana (ID: 1438346474): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: 583
+Elkana (ID: 1438346474): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: 1249
+Elkana (ID: 1438346474): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: 1249
+Valentino (ID: 5428691082): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: 2371
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Frauen, Deleted: True, Topic ID: 270
+Kleoh (ID: 1990947748): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: 2483
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Frauen, Deleted: True, Topic ID: 270
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: <coroutine object Thema_Handler.get_forum_info_by_message at 0x10e4815c0>
+ריקי (ID: 5043613846): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: <coroutine object Thema_Handler.get_forum_info_by_message at 0x10a238440>
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: <coroutine object Thema_Handler.get_forum_info_by_message at 0x10a2386c0>
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: 1
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: 1
+Elkana (ID: 1438346474): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: 2
+Elkana (ID: 1438346474): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: 2
+Elkana (ID: 1438346474): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: Info
+Elkana (ID: 1438346474): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: Info
+Elkana (ID: 1438346474): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: Info
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Parascha
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True, Topic ID: Info
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Fehler beim Löschen, Deleted: False, Topic ID: Info
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True, Topic ID: Info
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Fehler beim Löschen, Deleted: False, Topic ID: Info
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True, Topic ID: Info
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Fehler beim Löschen, Deleted: False, Topic ID: Info
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Frauen Gruppe
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Frauen Gruppe
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True, Topic ID: Info
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Fehler beim Löschen, Deleted: False, Topic ID: Info
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True, Topic ID: Info
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Frauen Gruppe
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Männer Gruppe
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Projekte
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist, Deleted: True, Topic ID: Info
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Info
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Frauen, Deleted: True, Topic ID: Frauen Gruppe
+Kleoh (ID: 1990947748): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Unterhaltung
+Kleoh (ID: 1990947748): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Unterhaltung
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Projekte
+יונתן בן אלכסנדר (ID: 276954529): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False
+יונתן בן אלכסנדר (ID: 276954529): Action: Verwarnt (Warnungen: 1), Reason: Durch Admin-Befehl, Deleted: False
+Elkana (ID: 1438346474): Action: Verwarnt (Warnungen: 1), Reason: Durch Admin-Befehl, Deleted: False
+Elkana (ID: 1438346474): Action: Verwarnt (Warnungen: 1), Reason: Durch Admin-Befehl, Deleted: False
+Elkana (ID: 1438346474): Action: Verwarnt (Warnungen: 1), Reason: Durch Admin-Befehl, Deleted: False
+Elkana (ID: 1438346474): Action: Verwarnt (Warnungen: 1), Reason: Durch Admin-Befehl, Deleted: False
+Elkana (ID: 1438346474): Action: Verwarnt (Warnungen: 1), Reason: Durch Admin-Befehl, Deleted: False
+Elkana (ID: 1438346474): Action: Verwarnt (Warnungen: 1), Reason: Durch Admin-Befehl, Deleted: False
+Elkana (ID: 1438346474): Action: Verwarnt (Warnungen: 2), Reason: Durch Admin-Befehl, Deleted: False
+Elkana (ID: 1438346474): Action: Verwarnt (Warnungen: 3), Reason: Durch Admin-Befehl, Deleted: False
+Elkana (ID: 1438346474): Action: Verwarnt (Warnungen: 4), Reason: Durch Admin-Befehl, Deleted: False
+יונתן בן אלכסנדר (ID: 276954529): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: Projekte
+יונתן בן אלכסנדר (ID: 276954529): Action: Verwarnt (Warnungen: 1), Reason: Durch Admin-Befehl, Deleted: False
+יונתן בן אלכסנדר (ID: 276954529): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Projekte
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Projekte
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Projekte
+יונתן בן אלכסנדר (ID: 276954529): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False, Topic ID: Info
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Info
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Frauen, Deleted: True, Topic ID: Frauen Gruppe
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Frauen, Deleted: True, Topic ID: Frauen Gruppe
+Elkana (ID: 1438346474): Action: gelöscht (Nutzer informiert), Reason: Nachricht von Nicht-Whitelist Frauen, Deleted: True, Topic ID: Frauen Gruppe
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Parascha
+יונתן בן אלכסנדר (ID: 276954529): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Parascha
+Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Parascha
+Sebastian (ID: 1082436365): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False
+Antonio (ID: 536224818): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True

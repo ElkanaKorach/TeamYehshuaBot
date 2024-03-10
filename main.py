@@ -53,7 +53,7 @@ async def main() -> None:
 
         # Reset the event for the next iteration
         restart_event.clear()
-            # Close the event loop after finishing
+        # Close the event loop after finishing
         await application.shutdown()
 
 if __name__ == "__main__":

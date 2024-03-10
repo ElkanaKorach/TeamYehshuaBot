@@ -1,0 +1,56 @@
+2023-08-23 13:13:39,917 - __main__ - INFO - Das Programm wurde gestartet.
+2023-08-23 13:13:40,253 - telegram.ext.dispatcher - ERROR - No error handlers are registered, logging exception.
+Traceback (most recent call last):
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/venv/lib/python3.9/site-packages/telegram/ext/dispatcher.py", line 340, in process_update
+    handler.handle_update(update, self, check, context)
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/venv/lib/python3.9/site-packages/telegram/ext/handler.py", line 119, in handle_update
+    return self.callback(update, context)
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/utils/message_handlers.py", line 16, in delete_general_messages
+    admins = [admin.user.id for admin in bot.getChatAdministrators(message.chat.id)]
+NameError: name 'bot' is not defined
+2023-08-23 13:13:44,804 - telegram.ext.dispatcher - ERROR - No error handlers are registered, logging exception.
+Traceback (most recent call last):
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/venv/lib/python3.9/site-packages/telegram/ext/dispatcher.py", line 340, in process_update
+    handler.handle_update(update, self, check, context)
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/venv/lib/python3.9/site-packages/telegram/ext/handler.py", line 119, in handle_update
+    return self.callback(update, context)
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/utils/message_handlers.py", line 16, in delete_general_messages
+    admins = [admin.user.id for admin in bot.getChatAdministrators(message.chat.id)]
+NameError: name 'bot' is not defined
+2023-08-23 13:13:55,433 - telegram.ext.dispatcher - ERROR - No error handlers are registered, logging exception.
+Traceback (most recent call last):
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/venv/lib/python3.9/site-packages/telegram/ext/dispatcher.py", line 340, in process_update
+    handler.handle_update(update, self, check, context)
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/venv/lib/python3.9/site-packages/telegram/ext/handler.py", line 119, in handle_update
+    return self.callback(update, context)
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/utils/message_handlers.py", line 16, in delete_general_messages
+    admins = [admin.user.id for admin in bot.getChatAdministrators(message.chat.id)]
+NameError: name 'bot' is not defined
+2023-08-23 13:14:01,475 - telegram.ext.dispatcher - ERROR - No error handlers are registered, logging exception.
+Traceback (most recent call last):
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/venv/lib/python3.9/site-packages/telegram/ext/dispatcher.py", line 340, in process_update
+    handler.handle_update(update, self, check, context)
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/venv/lib/python3.9/site-packages/telegram/ext/handler.py", line 119, in handle_update
+    return self.callback(update, context)
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/utils/message_handlers.py", line 16, in delete_general_messages
+    admins = [admin.user.id for admin in bot.getChatAdministrators(message.chat.id)]
+NameError: name 'bot' is not defined
+2023-08-23 13:16:57,058 - telegram.ext.dispatcher - ERROR - No error handlers are registered, logging exception.
+Traceback (most recent call last):
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/venv/lib/python3.9/site-packages/telegram/ext/dispatcher.py", line 340, in process_update
+    handler.handle_update(update, self, check, context)
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/venv/lib/python3.9/site-packages/telegram/ext/handler.py", line 119, in handle_update
+    return self.callback(update, context)
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/utils/message_handlers.py", line 16, in delete_general_messages
+    admins = [admin.user.id for admin in bot.getChatAdministrators(message.chat.id)]
+NameError: name 'bot' is not defined
+2023-08-23 13:17:44,734 - telegram.ext.dispatcher - ERROR - No error handlers are registered, logging exception.
+Traceback (most recent call last):
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/venv/lib/python3.9/site-packages/telegram/ext/dispatcher.py", line 340, in process_update
+    handler.handle_update(update, self, check, context)
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/venv/lib/python3.9/site-packages/telegram/ext/handler.py", line 119, in handle_update
+    return self.callback(update, context)
+  File "/Users/jonathansilasregel/PycharmProjects/pythonProject7/utils/whitelist_handler.py", line 49, in whitelist_user
+    admins = [admin.user.id for admin in bot.getChatAdministrators(message.chat.id)]
+NameError: name 'bot' is not defined
+2023-08-23 17:17:12,036 - telegram.ext.updater - INFO - Received signal 2 (SIGINT), stopping...
