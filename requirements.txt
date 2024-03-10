@@ -18,7 +18,6 @@ colorama==0.4.6
 dnspython==2.4.2
 urllib3==2.0.7
 telegram~=0.0.1
-v8eval~=0.3.2
 APScheduler~=3.10.4 
 aiolimiter~=1.1.0
 anyio~=4.3.0
@@ -45,3 +44,8 @@ tzlocal~=5.2
 numpy~=1.26.4
 pandas~=2.2.1
 python-dateutil~=2.9.0.post0
+#v8eval~=0.3.2
+anyio~=4.3.0
+h11~=0.14.0
+httpcore~=1.0.4
+httpx~=0.27.0
