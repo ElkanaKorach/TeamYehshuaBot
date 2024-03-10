@@ -1,9 +1,9 @@
 import os
 import asyncio
-from telegram import Update, Chat
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import logging
 from datetime import datetime
+from telegram import Update, Chat
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
 # Ersetze '6942337491:AAGVKMvHayewt5CUcNFg8xx_zprobgJ4jak' mit dem Token deines Bots
 TOKEN = '6942337491:AAGVKMvHayewt5CUcNFg8xx_zprobgJ4jak'
@@ -27,11 +27,18 @@ async def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
     # Füge einen MessageHandler hinzu, der auf alle Textnachrichten reagiert
-    application.add_handler(MessageHandler(filters.text & (~filters.command), echo))
+    application.add_handler(MessageHandler(filters.Text and (not filters.Command), echo))
 
-    # Starte den Bot
-    task = asyncio.create_task(application.run_polling())
-    await asyncio.gather(task)
+    try:
+        # Start the bot
+        polling_task = asyncio.create_task(application.run_polling())
+
+        # Wait for the polling task to complete before closing the event loop
+        await polling_task
+
+    finally:
+        # Close the event loop after finishing
+        await application.shutdown()
 
 if __name__ == "__main__":
     asyncio.run(main())
