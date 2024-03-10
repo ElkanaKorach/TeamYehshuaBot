@@ -29,15 +29,30 @@ async def main() -> None:
     # Füge einen MessageHandler hinzu, der auf alle Textnachrichten reagiert
     application.add_handler(MessageHandler(filters.Text and (not filters.Command), echo))
 
-    try:
-        # Start the bot
-        polling_task = asyncio.create_task(application.run_polling())
+    # Create an event to control the execution flow
+    restart_event = asyncio.Event()
 
-        # Wait for the polling task to complete before closing the event loop
-        await polling_task
+    while True:
+        try:
+            # Start the bot
+            polling_task = asyncio.create_task(application.run_polling())
 
-    finally:
-        # Close the event loop after finishing
+            # Wait until the polling task completes or the event is set
+            await asyncio.wait([polling_task, restart_event.wait()], return_when=asyncio.FIRST_COMPLETED)
+
+            # Cancel the polling task if it's still running
+            if not polling_task.done():
+                polling_task.cancel()
+
+        except asyncio.CancelledError:
+            # This exception is raised when the polling task is cancelled
+            pass
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+
+        # Reset the event for the next iteration
+        restart_event.clear()
+            # Close the event loop after finishing
         await application.shutdown()
 
 if __name__ == "__main__":
