@@ -32,6 +32,7 @@ async def main() -> None:
     # Create an event to control the execution flow
     restart_event = asyncio.Event()
 
+
     while True:
         try:
             # Start the bot
