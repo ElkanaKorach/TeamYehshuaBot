@@ -3,13 +3,24 @@ from telegram import Update
 from telegram.ext import CallbackContext
 import time
 import logging
-from configs.config import GENERAL_CHAT_MESSAGE_ID, SOZIALMEDIA_CHAT_MESSAGE_ID, MALE_CHAT_MESSAGE_ID, \
-    FEMALE_CHAT_MESSAGE_ID, INFO_CHAT_MESSAGE_ID, TOKEN
+import utils.logging_c.logging_utils as logging_utils
+from utils.logging_c.logging_utils import CustomFilter
+from configs.config import GENERAL_CHAT_MESSAGE_ID, SOZIALMEDIA_CHAT_MESSAGE_ID, MALE_CHAT_MESSAGE_ID, FEMALE_CHAT_MESSAGE_ID, INFO_CHAT_MESSAGE_ID, TOKEN
 from database.db_operations import DatabaseManager
+
+
+# Erstelle einen Filter und füge ihn dem root Logger hinzu
+logging_utils.setlogger(logging)
 
 # Logging
 logger = logging.getLogger(__name__)
+
+filter = CustomFilter(logging)
+logger.getLogger().addFilter(filter)
+
 db_manager = DatabaseManager()
+
+
 
 # Liste der Admin-IDs
 ADMIN_IDS = [1082436365, 1438346474]

@@ -12,40 +12,14 @@ from utils.supporter_handler import add_to_supporter
 from utils.warning_handler import warn_user
 from utils.ban_handler import ban_user
 from utils.user_data import load_warned_users
+import logging_c.logging_utils
 import logging
-from datetime import datetime
 
-# Log-Verzeichnis erstellen, falls nicht vorhanden
-if not os.path.exists('log'):
-    os.makedirs('log')
+# Erstelle einen Filter und füge ihn dem root Logger hinzu
+logging_c.logging_utils.setlogger(logging)
 
 # Muted Users Dictionary
 muted_users = {}
-import logging
-from datetime import datetime
-
-import logging
-from datetime import datetime
-
-
-class CustomFilter(logging.Filter):
-    def filter(self, record):
-        # Überprüfe, ob die Nachricht einen bestimmten Text enthält
-        if 'HTTP Request: POST https://api.telegram.org/bot6942337491:AAGVKMvHayewt5CUcNFg8xx_zprobgJ4jak' in record.getMessage():
-            return False  # Filtere diese Nachrichten aus
-        return True  # Zeichne alle anderen Nachrichten auf
-
-
-# Konfiguriere das grundlegende Logging-Setup
-current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-log_filename = f'log/log_{current_time}.log'
-logging.basicConfig(filename=log_filename, level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
-# Erstelle einen Filter und füge ihn dem root Logger hinzu
-filter = CustomFilter()
-logging.getLogger().addFilter(filter)
-
 
 # Whitelist-Funktion
 async def whitelist_user(update: Update, context: CallbackContext):

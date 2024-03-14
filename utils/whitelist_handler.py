@@ -3,9 +3,15 @@ from telegram.ext import CallbackContext
 from telegram import Update, Bot
 from configs.config import TOKEN
 import logging
+import utils.logging_c.logging_utils as logging_utils
+from utils.logging_c.logging_utils import CustomFilter
 from database.db_operations import DatabaseManager
 from utils.message_handlers import ADMIN_IDS
 
+# Erstelle einen Filter und füge ihn dem root Logger hinzu
+filter = CustomFilter(logging)
+logging.getLogger().addFilter(filter)
+logging_utils.setlogger(logging)
 logging.basicConfig(filename='app.log', filemode='a', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 bot = Bot(token=TOKEN)
