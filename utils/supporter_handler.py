@@ -6,11 +6,17 @@ from database.db_operations import DatabaseManager
 
 # Assuming the log_message function is located in a module named logger.py
 import logging
+import utils.logging_c.logging_utils as logging_utils
+from utils.logging_c.logging_utils import CustomFilter
+# Erstelle einen Filter und füge ihn dem root Logger hinzu
+logging_utils.setlogger(logging)
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
+# Logging
 logger = logging.getLogger(__name__)
+filter = CustomFilter(logging)
+logger.getLogger().addFilter(filter)
 
 db_cache = DatabaseManager()
 

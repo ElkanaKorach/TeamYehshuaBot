@@ -12,17 +12,18 @@ from utils.supporter_handler import add_to_supporter
 from utils.warning_handler import warn_user
 from utils.ban_handler import ban_user
 from utils.user_data import load_warned_users
+<<<<<<< HEAD
+=======
+import logging_c.logging_utils
 import logging
-from datetime import datetime
+>>>>>>> 82bf4e0d2916f330878511e40c0d2a3c68c8dba4
 
-# Log-Verzeichnis erstellen, falls nicht vorhanden
-if not os.path.exists('log'):
-    os.makedirs('log')
+# Erstelle einen Filter und füge ihn dem root Logger hinzu
+logging_c.logging_utils.setlogger(logging)
 
 # Muted Users Dictionary
 muted_users = {}
-import logging
-from datetime import datetime
+<<<<<<< HEAD
 
 import logging
 from datetime import datetime
@@ -46,6 +47,8 @@ logging.basicConfig(filename=log_filename, level=logging.INFO,
 filter = CustomFilter()
 logging.getLogger().addFilter(filter)
 
+=======
+>>>>>>> 82bf4e0d2916f330878511e40c0d2a3c68c8dba4
 
 # Whitelist-Funktion
 async def whitelist_user(update: Update, context: CallbackContext):

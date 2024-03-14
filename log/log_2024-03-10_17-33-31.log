@@ -1,0 +1,3 @@
+2024-03-10 17:33:31,776 - database.db_operations - INFO - Erfolgreich mit der Datenbank verbunden.
+2024-03-10 17:33:32,157 - apscheduler.scheduler - INFO - Scheduler started
+2024-03-10 17:33:32,158 - telegram.ext.Application - INFO - Application started

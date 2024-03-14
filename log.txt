@@ -133,3 +133,6 @@ Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Dele
 Elkana (ID: 1438346474): Action: nicht gelöscht, Reason: Andere Themen-ID, Deleted: False, Topic ID: Parascha
 Sebastian (ID: 1082436365): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False
 Antonio (ID: 536224818): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Elkana (ID: 1438346474): Action: nicht gelöscht (Admin), Reason: Nachricht von Admin, Deleted: False
+יונתן בן אלכסנדר (ID: 276954529): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
+Marvin (ID: 1951863078): Action: gelöscht (Nutzer informiert), Reason: Nachricht ohne ID, Deleted: True
