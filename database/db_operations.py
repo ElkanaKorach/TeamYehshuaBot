@@ -1,116 +1,217 @@
+"""
+Database Manager
+SQLite-backed persistence for the TeamYehshua Telegram bot.
+
+Tables:
+  whitelistsozialmedia  – user IDs for social-media topic
+  whitelistmale         – user IDs for men's topic
+  whitelistfemale       – user IDs for women's topic
+  whitelistparascha     – user IDs for parascha topic
+  whitelistprojekte     – user IDs for projects topic
+  whitelistinfo         – user IDs for info topic
+  warnings              – per-user warning records
+  group_settings        – per-chat key/value settings (rules, welcome, …)
+  chats                 – registry of all chats the bot has seen
+"""
+
 import sqlite3
 import logging
 
-# Logging-Konfiguration
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-DATABASE_PATH = 'local_db.sqlite3'
+DATABASE_PATH = "local_db.sqlite3"
+
 
 class DatabaseManager:
     def __init__(self):
         self.create_tables()
-        # Initialisiere Whitelists
-        self.whitelistsozialmedia = self.get_list("whitelistsozialmedia")
-        self.whitelistmale = self.get_list("whitelistmale")
-        self.whitelistfemale = self.get_list("whitelistfemale")
-        self.whitelistparascha = self.get_list("whitelistparascha")
-        self.whitelistprojekte = self.get_list("whitelistprojekte")
+
+    # ─────────────────────────────────────────
+    #  Connection
+    # ─────────────────────────────────────────
 
     def create_connection(self):
         try:
-            connection = sqlite3.connect(DATABASE_PATH)
-            logger.info("Erfolgreich mit der Datenbank verbunden.")
-            return connection
+            conn = sqlite3.connect(DATABASE_PATH)
+            return conn
         except Exception as e:
-            logger.error(f"Verbindung zur Datenbank nicht möglich! Grund: {str(e)}")
+            logger.error(f"DB connection failed: {e}")
             raise
 
+    # ─────────────────────────────────────────
+    #  Schema creation
+    # ─────────────────────────────────────────
+
     def create_tables(self):
-        # Erstelle Tabellen
         with self.create_connection() as conn:
-            cursor = conn.cursor()
-            # Erstellen verschiedener Tabellen
-            cursor.execute('''CREATE TABLE IF NOT EXISTS whitelistsozialmedia (userid INTEGER PRIMARY KEY)''')
-            cursor.execute('''CREATE TABLE IF NOT EXISTS whitelistmale (userid INTEGER PRIMARY KEY)''')
-            cursor.execute('''CREATE TABLE IF NOT EXISTS whitelistfemale (userid INTEGER PRIMARY KEY)''')
-            cursor.execute('''CREATE TABLE IF NOT EXISTS whitelistparascha (userid INTEGER PRIMARY KEY)''')
-            cursor.execute('''CREATE TABLE IF NOT EXISTS whitelistprojekte (userid INTEGER PRIMARY KEY)''')
-            cursor.execute('''CREATE TABLE IF NOT EXISTS whitelistinfo (userid INTEGER PRIMARY KEY)''')
-            cursor.execute('''
+            c = conn.cursor()
+            # Whitelist tables
+            for tbl in (
+                "whitelistsozialmedia",
+                "whitelistmale",
+                "whitelistfemale",
+                "whitelistparascha",
+                "whitelistprojekte",
+                "whitelistinfo",
+            ):
+                c.execute(f"CREATE TABLE IF NOT EXISTS {tbl} (userid INTEGER PRIMARY KEY)")
+
+            # Warnings table
+            c.execute(
+                """
                 CREATE TABLE IF NOT EXISTS warnings (
-                    id INTEGER PRIMARY KEY,
+                    id      INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
                     chat_id INTEGER NOT NULL,
-                    reason TEXT
+                    reason  TEXT
                 )
-            ''')
+                """
+            )
+
+            # Per-chat settings (rules, welcome message, …)
+            c.execute(
+                """
+                CREATE TABLE IF NOT EXISTS group_settings (
+                    chat_id INTEGER NOT NULL,
+                    key     TEXT    NOT NULL,
+                    value   TEXT,
+                    PRIMARY KEY (chat_id, key)
+                )
+                """
+            )
+
+            # Chat registry (for broadcast)
+            c.execute(
+                """
+                CREATE TABLE IF NOT EXISTS chats (
+                    chat_id INTEGER PRIMARY KEY,
+                    title   TEXT,
+                    registered_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+
             conn.commit()
-            logger.info("Tabellen erfolgreich erstellt/überprüft.")
+            logger.info("Database tables verified/created.")
 
-    def get_list(self, table_name):
-        # Hole Liste aus Tabelle
-        with self.create_connection() as connection:
-            cursor = connection.cursor()
-            cursor.execute(f"SELECT userid FROM {table_name}")
-            return [row[0] for row in cursor.fetchall()]
+    # ─────────────────────────────────────────
+    #  Whitelist helpers
+    # ─────────────────────────────────────────
 
-    def save_list_to_table(self, table_name, user_ids):
-        # Speichere Liste in Tabelle
-        with self.create_connection() as connection:
-            cursor = connection.cursor()
-            for user_id in user_ids:
+    def get_list(self, table_name: str) -> list:
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute(f"SELECT userid FROM {table_name}")
+            return [row[0] for row in c.fetchall()]
+
+    def save_list_to_table(self, table_name: str, user_ids: list):
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            for uid in user_ids:
                 try:
-                    cursor.execute(f"INSERT OR IGNORE INTO {table_name} (userid) VALUES (?)", (user_id,))
-                    connection.commit()
-                    logger.info(f"User ID {user_id} erfolgreich in {table_name} eingefügt.")
+                    c.execute(
+                        f"INSERT OR IGNORE INTO {table_name} (userid) VALUES (?)", (uid,)
+                    )
                 except Exception as e:
-                    logger.error(f"Fehler beim Einfügen von User ID {user_id} in {table_name}. Grund: {str(e)}")
+                    logger.error(f"Insert into {table_name} failed for {uid}: {e}")
+            conn.commit()
 
-    def clear_list_table(self, table_name):
-        # Leere Tabelle
-        with self.create_connection() as connection:
-            cursor = connection.cursor()
-            try:
-                cursor.execute(f"DELETE FROM {table_name}")
-                connection.commit()
-                logger.info(f"Whitelist {table_name} wurde erfolgreich geleert.")
-            except Exception as e:
-                logger.error(f"Fehler beim Leeren der Whitelist {table_name}. Grund: {str(e)}")
+    def remove_from_list(self, table_name: str, user_id: int):
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute(f"DELETE FROM {table_name} WHERE userid = ?", (user_id,))
+            conn.commit()
 
-    def get_warnings(self, user_id):
-        # Hole Warnungen für einen Benutzer
-        with self.create_connection() as connection:
-            cursor = connection.cursor()
-            try:
-                cursor.execute("SELECT COUNT(*) FROM warnings WHERE user_id = ?", (user_id,))
-                warnings_count = cursor.fetchone()[0]
-                logger.info(f"Anzahl der Warnungen für User ID {user_id} ist {warnings_count}.")
-                return warnings_count
-            except Exception as e:
-                logger.error(f"Fehler beim Abrufen der Warnungen für User ID {user_id}. Grund: {str(e)}")
-                return 0
+    def clear_list_table(self, table_name: str):
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute(f"DELETE FROM {table_name}")
+            conn.commit()
 
-    def set_warnings(self, user_id, warnings_count):
-        with self.create_connection() as connection:
-            cursor = connection.cursor()
-            try:
-                cursor.execute("UPDATE warnings SET warnings_count = ? WHERE user_id = ?", (warnings_count, user_id))
-                connection.commit()
-                logger.info(f"Anzahl der Warnungen für User ID {user_id} erfolgreich auf {warnings_count} gesetzt.")
-            except Exception as e:
-                logger.error(f"Fehler beim Setzen der Warnungen für User ID {user_id}. Grund: {str(e)}")
+    # ─────────────────────────────────────────
+    #  Warning helpers
+    # ─────────────────────────────────────────
 
-    def add_warning(self, user_id, chat_id, reason):
-        # Füge eine Warnung für einen Benutzer hinzu
-        with self.create_connection() as connection:
-            cursor = connection.cursor()
-            try:
-                cursor.execute("INSERT INTO warnings (user_id, chat_id, reason) VALUES (?, ?, ?)", (user_id, chat_id, reason))
-                connection.commit()
-                logger.info(f"Warnung für User ID {user_id} erfolgreich hinzugefügt.")
-            except Exception as e:
-                logger.error(f"Fehler beim Hinzufügen einer Warnung für User ID {user_id}. Grund: {str(e)}")
+    def get_warnings(self, user_id: int) -> int:
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute("SELECT COUNT(*) FROM warnings WHERE user_id = ?", (user_id,))
+            return c.fetchone()[0]
 
-# Initialisiere Datenbank-Manager
+    def add_warning(self, user_id: int, chat_id: int, reason: str):
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute(
+                "INSERT INTO warnings (user_id, chat_id, reason) VALUES (?, ?, ?)",
+                (user_id, chat_id, reason),
+            )
+            conn.commit()
+
+    def remove_last_warning(self, user_id: int):
+        """Delete the most recent warning for a user."""
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute(
+                "DELETE FROM warnings WHERE id = ("
+                "  SELECT id FROM warnings WHERE user_id = ? ORDER BY id DESC LIMIT 1"
+                ")",
+                (user_id,),
+            )
+            conn.commit()
+
+    def reset_warnings(self, user_id: int):
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute("DELETE FROM warnings WHERE user_id = ?", (user_id,))
+            conn.commit()
+
+    # Legacy compatibility
+    def set_warnings(self, user_id: int, count: int):
+        self.reset_warnings(user_id)
+
+    # ─────────────────────────────────────────
+    #  Group settings helpers
+    # ─────────────────────────────────────────
+
+    def get_setting(self, chat_id: int, key: str) -> str:
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute(
+                "SELECT value FROM group_settings WHERE chat_id = ? AND key = ?",
+                (chat_id, key),
+            )
+            row = c.fetchone()
+            return row[0] if row else ""
+
+    def set_setting(self, chat_id: int, key: str, value: str):
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute(
+                "INSERT OR REPLACE INTO group_settings (chat_id, key, value) VALUES (?, ?, ?)",
+                (chat_id, key, value),
+            )
+            conn.commit()
+
+    # ─────────────────────────────────────────
+    #  Chat registry helpers
+    # ─────────────────────────────────────────
+
+    def register_chat(self, chat_id: int, title: str = ""):
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute(
+                "INSERT OR IGNORE INTO chats (chat_id, title) VALUES (?, ?)",
+                (chat_id, title),
+            )
+            conn.commit()
+
+    def get_all_chats(self) -> list:
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute("SELECT chat_id FROM chats")
+            return [row[0] for row in c.fetchall()]
+
+
+# Module-level singleton
 db_manager = DatabaseManager()
