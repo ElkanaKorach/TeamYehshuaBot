@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+{% block title %}Nachricht planen{% endblock %}
+{% block page_title %}Neue Nachricht planen{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+  .type-btn { cursor:pointer; border:2px solid #dee2e6; border-radius:10px; padding:16px 10px;
+              text-align:center; transition:.2s; }
+  .type-btn:hover, .type-btn.active { border-color:#0d6efd; background:#e7f1ff; }
+  .type-btn i { font-size:1.8rem; display:block; margin-bottom:6px; }
+  .btn-row { background:#f8f9fa; border-radius:8px; padding:10px 12px; margin-bottom:8px; }
+  #buttons-preview { font-family:monospace; font-size:.8rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-9">
+<form method="POST" enctype="multipart/form-data" id="mainForm">
+  <input type="hidden" name="buttons_json" id="buttons_json_input">
+
+  <!-- Step 1: Chat -->
+  <div class="card mb-4">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold"><i class="bi bi-chat-dots me-2 text-primary"></i>1. Ziel-Chat</span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Chat auswählen</label>
+          <select class="form-select" id="chat_select" onchange="syncChat()">
+            <option value="">— Bekannte Chats —</option>
+            {% for c in chats %}
+            <option value="{{ c.chat_id }}">{{ c.title or c.chat_id }} ({{ c.chat_id }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Oder Chat-ID manuell eingeben</label>
+          <input type="text" class="form-control" name="chat_id" id="chat_id_input"
+                 placeholder="-100123456789" required>
+          <div class="form-text">Gruppe: beginnt mit -100…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Type -->
+  <div class="card mb-4">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold"><i class="bi bi-layout-text-window me-2 text-primary"></i>2. Nachrichtentyp</span>
+    </div>
+    <div class="card-body">
+      <input type="hidden" name="message_type" id="message_type_input" value="text">
+      <div class="row g-2">
+        {% for t, icon, label in [
+          ('text',     'bi-chat-text',    'Text'),
+          ('photo',    'bi-image',        'Bild'),
+          ('video',    'bi-camera-video', 'Video'),
+          ('document', 'bi-file-earmark', 'Datei'),
+          ('audio',    'bi-music-note',   'Audio'),
+        ] %}
+        <div class="col-4 col-sm-2">
+          <div class="type-btn {% if loop.first %}active{% endif %}"
+               onclick="selectType('{{ t }}', this)">
+            <i class="bi {{ icon }}"></i>
+            <small>{{ label }}</small>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Content -->
+  <div class="card mb-4">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold"><i class="bi bi-pencil-square me-2 text-primary"></i>3. Inhalt</span>
+    </div>
+    <div class="card-body">
+
+      <!-- Text content (shown for text type) -->
+      <div id="section-text">
+        <label class="form-label fw-semibold">Text <small class="text-muted">(HTML erlaubt: &lt;b&gt;, &lt;i&gt;, &lt;a href=…&gt;)</small></label>
+        <textarea class="form-control font-monospace" name="content" rows="6"
+                  placeholder="Nachrichtentext eingeben…"></textarea>
+      </div>
+
+      <!-- Media sections -->
+      <div id="section-media" style="display:none">
+        <label class="form-label fw-semibold">Caption <small class="text-muted">(optional, HTML erlaubt)</small></label>
+        <textarea class="form-control" name="caption" rows="3"
+                  placeholder="Beschreibung zum Medium…"></textarea>
+
+        <hr>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Datei hochladen</label>
+            <input type="file" class="form-control" name="media_file" id="media_file_input"
+                   accept="image/*,video/*,audio/*,.pdf,.zip,.docx,.txt">
+            <div class="form-text">Bis zu 50 MB</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Oder URL</label>
+            <input type="url" class="form-control" name="media_url"
+                   placeholder="https://example.com/bild.jpg">
+          </div>
+        </div>
+
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Oder Telegram File-ID</label>
+            <input type="text" class="form-control" name="media_file_id"
+                   placeholder="AgACAgIAAxkBAAI…">
+            <div class="form-text">Bereits bekannte Telegram-Datei-ID</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: Buttons -->
+  <div class="card mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between">
+      <span class="fw-semibold"><i class="bi bi-ui-checks me-2 text-primary"></i>4. Telegram Buttons <small class="text-muted">(optional)</small></span>
+      <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRow()">
+        <i class="bi bi-plus"></i> Zeile hinzufügen
+      </button>
+    </div>
+    <div class="card-body">
+      <p class="text-muted small mb-3">
+        Füge Inline-Keyboard-Buttons hinzu. Jede Zeile = eine Tastenreihe. Mehrere Buttons pro Zeile möglich.
+      </p>
+      <div id="button-builder"></div>
+
+      <!-- JSON preview -->
+      <div class="mt-3">
+        <label class="form-label small text-muted">JSON-Vorschau (wird automatisch aktualisiert)</label>
+        <pre id="buttons-preview" class="bg-light p-2 rounded small">[]</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 5: Schedule -->
+  <div class="card mb-4">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold"><i class="bi bi-clock me-2 text-primary"></i>5. Zeitpunkt</span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">Datum &amp; Uhrzeit</label>
+          <input type="text" class="form-control form-control-lg" name="scheduled_at"
+                 id="datetime_picker" placeholder="TT.MM.JJJJ HH:MM" required>
+          <div class="form-text">Zeitzone: Server-Lokalzeit (UTC)</div>
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+          <div class="row g-2 w-100">
+            {% for label, delta in [('In 1h','1h'),('In 6h','6h'),('Morgen','24h'),('In 1 Woche','168h')] %}
+            <div class="col-6">
+              <button type="button" class="btn btn-outline-secondary w-100 btn-sm"
+                      onclick="setRelativeTime('{{ delta }}')">{{ label }}</button>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div class="d-flex gap-3">
+    <button type="submit" class="btn btn-primary btn-lg px-5">
+      <i class="bi bi-calendar-plus me-2"></i>Nachricht planen
+    </button>
+    <a href="{{ url_for('messages') }}" class="btn btn-outline-secondary btn-lg">Abbrechen</a>
+  </div>
+</form>
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
+<script>
+// ── Datetime Picker ──────────────────────────────────────
+const fp = flatpickr("#datetime_picker", {
+  locale: "de",
+  enableTime: true,
+  time_24hr: true,
+  dateFormat: "Y-m-d\\TH:i",
+  altInput: true,
+  altFormat: "d.m.Y H:i",
+  minDate: "today",
+});
+
+function setRelativeTime(delta) {
+  const h = parseInt(delta);
+  const d = new Date(Date.now() + h * 3600000);
+  fp.setDate(d);
+}
+
+// ── Chat sync ────────────────────────────────────────────
+function syncChat() {
+  const v = document.getElementById('chat_select').value;
+  if (v) document.getElementById('chat_id_input').value = v;
+}
+
+// ── Message type ─────────────────────────────────────────
+function selectType(type, el) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('message_type_input').value = type;
+  document.getElementById('section-text').style.display  = type === 'text' ? '' : 'none';
+  document.getElementById('section-media').style.display = type !== 'text' ? '' : 'none';
+}
+
+// ── Button Builder ───────────────────────────────────────
+let rowCount = 0;
+
+function addRow() {
+  rowCount++;
+  const id = 'row-' + rowCount;
+  const div = document.createElement('div');
+  div.className = 'btn-row';
+  div.id = id;
+  div.innerHTML = `
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <small class="fw-semibold text-muted">Zeile ${rowCount}</small>
+      <div>
+        <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                onclick="addBtn('${id}')"><i class="bi bi-plus"></i> Button</button>
+        <button type="button" class="btn btn-sm btn-outline-danger"
+                onclick="removeRow('${id}')"><i class="bi bi-trash"></i></button>
+      </div>
+    </div>
+    <div class="btn-list row g-2"></div>
+  `;
+  document.getElementById('button-builder').appendChild(div);
+  addBtn(id);
+  updateJSON();
+}
+
+function addBtn(rowId) {
+  const btnId = rowId + '-btn-' + Date.now();
+  const list  = document.querySelector('#' + rowId + ' .btn-list');
+  const col   = document.createElement('div');
+  col.className = 'col-md-6';
+  col.id = btnId;
+  col.innerHTML = `
+    <div class="border rounded p-2 bg-white">
+      <div class="row g-1 mb-1">
+        <div class="col">
+          <input type="text" class="form-control form-control-sm btn-text"
+                 placeholder="Button-Text" oninput="updateJSON()">
+        </div>
+        <div class="col-auto">
+          <button type="button" class="btn btn-sm btn-outline-danger"
+                  onclick="removeBtn('${btnId}')"><i class="bi bi-x"></i></button>
+        </div>
+      </div>
+      <select class="form-select form-select-sm btn-type mb-1" onchange="toggleBtnType(this); updateJSON()">
+        <option value="url">URL</option>
+        <option value="callback">Callback-Daten</option>
+      </select>
+      <input type="text" class="form-control form-control-sm btn-value"
+             placeholder="https://example.com" oninput="updateJSON()">
+    </div>
+  `;
+  list.appendChild(col);
+  updateJSON();
+}
+
+function toggleBtnType(sel) {
+  const input = sel.nextElementSibling;
+  input.placeholder = sel.value === 'url' ? 'https://example.com' : 'callback_action';
+}
+
+function removeRow(rowId) {
+  document.getElementById(rowId)?.remove();
+  updateJSON();
+}
+
+function removeBtn(btnId) {
+  document.getElementById(btnId)?.remove();
+  updateJSON();
+}
+
+function updateJSON() {
+  const rows = document.querySelectorAll('#button-builder .btn-row');
+  const result = [];
+  rows.forEach(row => {
+    const buttons = [];
+    row.querySelectorAll('[id^=' + row.id + '-btn]').forEach(btnDiv => {
+      const text  = btnDiv.querySelector('.btn-text')?.value?.trim();
+      const type  = btnDiv.querySelector('.btn-type')?.value;
+      const value = btnDiv.querySelector('.btn-value')?.value?.trim();
+      if (text && value) {
+        if (type === 'url')
+          buttons.push({ text, url: value });
+        else
+          buttons.push({ text, callback_data: value });
+      }
+    });
+    if (buttons.length) result.push(buttons);
+  });
+  const json = JSON.stringify(result, null, 2);
+  document.getElementById('buttons_json_input').value = result.length ? JSON.stringify(result) : '';
+  document.getElementById('buttons-preview').textContent = json;
+}
+
+// Sync before submit
+document.getElementById('mainForm').addEventListener('submit', () => {
+  updateJSON();
+});
+</script>
+{% endblock %}

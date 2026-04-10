@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Geplante Nachrichten{% endblock %}
+{% block page_title %}Geplante Nachrichten{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <!-- Status filter -->
+  <div class="btn-group">
+    {% for s, label in [('','Alle'),('pending','Ausstehend'),('sent','Gesendet'),('failed','Fehler'),('cancelled','Abgebrochen')] %}
+    <a href="{{ url_for('messages', status=s) }}"
+       class="btn btn-sm {{ 'btn-primary' if status_filter==s else 'btn-outline-secondary' }}">
+      {{ label }}
+    </a>
+    {% endfor %}
+  </div>
+  <a href="{{ url_for('add_message') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle me-1"></i>Neue Nachricht planen
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Typ</th>
+          <th>Chat</th>
+          <th>Vorschau</th>
+          <th>Geplant für</th>
+          <th>Status</th>
+          <th>Erstellt</th>
+          <th>Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in messages %}
+        <tr>
+          <td class="text-muted small">{{ m.id }}</td>
+          <td>
+            {% set icons = {'text':'chat-text','photo':'image','video':'camera-video','document':'file-earmark','audio':'music-note'} %}
+            <i class="bi bi-{{ icons.get(m.message_type,'chat') }} me-1"></i>
+            <span class="badge bg-light text-dark border small">{{ m.message_type }}</span>
+          </td>
+          <td>
+            <code class="small">{{ m.chat_id }}</code>
+            {% if m.chat_id | string in chats %}
+            <br><small class="text-muted">{{ chats[m.chat_id] }}</small>
+            {% endif %}
+          </td>
+          <td class="small text-muted" style="max-width:200px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">
+            {{ (m.content or m.caption or m.media_url or '–')[:80] }}
+          </td>
+          <td class="small">{{ m.scheduled_at | dt_format }}</td>
+          <td>{{ m.status | status_badge | safe }}</td>
+          <td class="small text-muted">{{ m.created_at | dt_format }}</td>
+          <td>
+            <div class="d-flex gap-1">
+              <a href="{{ url_for('view_message', msg_id=m.id) }}"
+                 class="btn btn-sm btn-outline-primary" title="Details">
+                <i class="bi bi-eye"></i>
+              </a>
+              {% if m.status == 'pending' %}
+              <form method="POST" action="{{ url_for('cancel_message', msg_id=m.id) }}" style="display:inline">
+                <button class="btn btn-sm btn-outline-warning" title="Abbrechen"
+                        onclick="return confirm('Nachricht abbrechen?')">
+                  <i class="bi bi-stop-circle"></i>
+                </button>
+              </form>
+              {% endif %}
+              <form method="POST" action="{{ url_for('delete_message', msg_id=m.id) }}" style="display:inline">
+                <button class="btn btn-sm btn-outline-danger" title="Löschen"
+                        onclick="return confirm('Nachricht löschen?')">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+            Keine Nachrichten gefunden
+            <br>
+            <a href="{{ url_for('add_message') }}" class="btn btn-primary mt-3">
+              <i class="bi bi-plus"></i> Erste Nachricht planen
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

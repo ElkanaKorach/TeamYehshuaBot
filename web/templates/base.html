@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}TeamYehshua Bot{% endblock %} — Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root { --sidebar-w: 240px; }
+    body { background:#f0f2f5; font-family:'Segoe UI',sans-serif; }
+
+    /* Sidebar */
+    #sidebar {
+      position:fixed; top:0; left:0; height:100vh; width:var(--sidebar-w);
+      background:linear-gradient(180deg,#1a1f2e 0%,#0d1117 100%);
+      color:#cdd6f4; z-index:1000; overflow-y:auto;
+    }
+    #sidebar .brand {
+      padding:20px 20px 16px;
+      font-size:1.1rem; font-weight:700; color:#89b4fa;
+      border-bottom:1px solid #2a2f3d;
+    }
+    #sidebar .nav-link {
+      color:#cdd6f4; padding:10px 20px; border-radius:6px; margin:2px 8px;
+      display:flex; align-items:center; gap:10px; transition:.15s;
+    }
+    #sidebar .nav-link:hover, #sidebar .nav-link.active {
+      background:#2a2f3d; color:#89b4fa;
+    }
+    #sidebar .nav-section {
+      font-size:.7rem; letter-spacing:.1em; color:#6c7086;
+      padding:14px 20px 4px; text-transform:uppercase;
+    }
+
+    /* Main */
+    #main { margin-left:var(--sidebar-w); min-height:100vh; }
+    .topbar {
+      background:#fff; border-bottom:1px solid #e2e8f0;
+      padding:14px 28px; display:flex; align-items:center;
+      justify-content:space-between; position:sticky; top:0; z-index:100;
+    }
+    .page-content { padding:28px; }
+
+    /* Cards */
+    .stat-card {
+      border:none; border-radius:12px; padding:22px;
+      background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.08);
+    }
+    .stat-card .icon {
+      width:48px; height:48px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.4rem; margin-bottom:12px;
+    }
+    .stat-card .value { font-size:2rem; font-weight:700; color:#1a1f2e; }
+    .stat-card .label { color:#6c7086; font-size:.85rem; }
+
+    /* Tables */
+    .card { border:none; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .table th { font-size:.8rem; text-transform:uppercase; letter-spacing:.05em; color:#6c7086; }
+
+    /* Alerts */
+    .flash-container { position:fixed; top:16px; right:16px; z-index:9999; min-width:280px; }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- Flash messages -->
+<div class="flash-container">
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in msgs %}
+    <div class="alert alert-{{ cat }} alert-dismissible fade show shadow" role="alert">
+      {{ msg }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  {% endwith %}
+</div>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="brand">
+    <i class="bi bi-robot me-2"></i>TeamYehshua
+  </div>
+  <div class="mt-2">
+    <div class="nav-section">Übersicht</div>
+    <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint=='dashboard' %}active{% endif %}">
+      <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
+
+    <div class="nav-section">Nachrichten</div>
+    <a href="{{ url_for('messages') }}" class="nav-link {% if request.endpoint in ['messages','view_message'] %}active{% endif %}">
+      <i class="bi bi-calendar-check"></i> Geplante Nachrichten
+    </a>
+    <a href="{{ url_for('add_message') }}" class="nav-link {% if request.endpoint=='add_message' %}active{% endif %}">
+      <i class="bi bi-plus-circle"></i> Neue planen
+    </a>
+
+    <div class="nav-section">Verwaltung</div>
+    <a href="{{ url_for('settings') }}" class="nav-link {% if request.endpoint=='settings' %}active{% endif %}">
+      <i class="bi bi-gear"></i> Einstellungen
+    </a>
+    <a href="{{ url_for('whitelist') }}" class="nav-link {% if request.endpoint=='whitelist' %}active{% endif %}">
+      <i class="bi bi-person-check"></i> Whitelist
+    </a>
+    <a href="{{ url_for('warnings_page') }}" class="nav-link {% if request.endpoint=='warnings_page' %}active{% endif %}">
+      <i class="bi bi-exclamation-triangle"></i> Verwarnungen
+    </a>
+
+    <div class="nav-section">System</div>
+    <a href="{{ url_for('logout') }}" class="nav-link text-danger">
+      <i class="bi bi-box-arrow-left"></i> Abmelden
+    </a>
+  </div>
+</nav>
+
+<!-- Main content -->
+<div id="main">
+  <div class="topbar">
+    <span class="fw-semibold text-muted">{% block page_title %}{% endblock %}</span>
+    <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ now }}</small>
+  </div>
+  <div class="page-content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+<script>
+  // Auto-dismiss flash after 4 s
+  setTimeout(() => {
+    document.querySelectorAll('.flash-container .alert').forEach(el => {
+      bootstrap.Alert.getOrCreateInstance(el).close();
+    });
+  }, 4000);
+</script>
+</body>
+</html>

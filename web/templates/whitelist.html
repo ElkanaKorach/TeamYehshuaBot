@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Whitelist{% endblock %}
+{% block page_title %}Whitelist-Verwaltung{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  {% for cat, info in data.items() %}
+  <div class="col-md-6 col-xl-4">
+    <div class="card h-100">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">
+          <i class="bi bi-person-check me-2 text-success"></i>{{ info.label }}
+        </span>
+        <span class="badge bg-primary rounded-pill">{{ info.members | length }}</span>
+      </div>
+
+      <!-- Member list -->
+      <ul class="list-group list-group-flush" style="max-height:260px; overflow-y:auto;">
+        {% for uid in info.members %}
+        <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+          <code class="small">{{ uid }}</code>
+          <form method="POST" action="{{ url_for('whitelist_remove') }}" style="margin:0">
+            <input type="hidden" name="category" value="{{ cat }}">
+            <input type="hidden" name="user_id"  value="{{ uid }}">
+            <button class="btn btn-sm btn-outline-danger py-0 px-1"
+                    title="Entfernen"
+                    onclick="return confirm('User {{ uid }} entfernen?')">
+              <i class="bi bi-x"></i>
+            </button>
+          </form>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted text-center small py-3">Leer</li>
+        {% endfor %}
+      </ul>
+
+      <!-- Add form -->
+      <div class="card-footer bg-white">
+        <form method="POST" action="{{ url_for('whitelist_add') }}"
+              class="d-flex gap-2">
+          <input type="hidden" name="category" value="{{ cat }}">
+          <input type="number" name="user_id" class="form-control form-control-sm"
+                 placeholder="User-ID" required style="max-width:140px;">
+          <button type="submit" class="btn btn-sm btn-success">
+            <i class="bi bi-plus"></i> Hinzufügen
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

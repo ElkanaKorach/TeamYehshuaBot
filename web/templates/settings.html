@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Einstellungen{% endblock %}
+{% block page_title %}Bot-Einstellungen{% endblock %}
+
+{% block content %}
+{% if chat_settings %}
+  {% for cs in chat_settings %}
+  <div class="card mb-4">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold">
+        <i class="bi bi-chat-dots me-2 text-primary"></i>
+        {{ cs.chat.title or cs.chat.chat_id }}
+        <code class="small text-muted ms-2">{{ cs.chat.chat_id }}</code>
+        <span class="badge bg-light text-muted border ms-1 small">{{ cs.chat.chat_type or '?' }}</span>
+      </span>
+    </div>
+    <div class="card-body">
+      <div class="row g-4">
+
+        <!-- Rules -->
+        <div class="col-md-6">
+          <form method="POST">
+            <input type="hidden" name="action"  value="save_rules">
+            <input type="hidden" name="chat_id" value="{{ cs.chat.chat_id }}">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-list-ul me-1 text-warning"></i>Gruppenregeln
+            </label>
+            <textarea class="form-control font-monospace" name="rules" rows="8"
+                      placeholder="Regeln eingeben…">{{ cs.rules }}</textarea>
+            <div class="form-text mb-2">Wird mit /rules angezeigt. HTML erlaubt.</div>
+            <button type="submit" class="btn btn-warning btn-sm">
+              <i class="bi bi-save me-1"></i>Regeln speichern
+            </button>
+          </form>
+        </div>
+
+        <!-- Welcome -->
+        <div class="col-md-6">
+          <form method="POST">
+            <input type="hidden" name="action"  value="save_welcome">
+            <input type="hidden" name="chat_id" value="{{ cs.chat.chat_id }}">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-hand-wave me-1 text-success"></i>Willkommensnachricht
+            </label>
+            <textarea class="form-control" name="welcome" rows="8"
+                      placeholder="Willkommensnachricht eingeben…">{{ cs.welcome }}</textarea>
+            <div class="form-text mb-2">
+              Variablen: <code>{name}</code> <code>{id}</code> <code>{chat}</code> — HTML erlaubt.
+            </div>
+            <button type="submit" class="btn btn-success btn-sm">
+              <i class="bi bi-save me-1"></i>Willkommen speichern
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+{% else %}
+  <!-- No chats registered yet -->
+  <div class="card">
+    <div class="card-body text-center py-5 text-muted">
+      <i class="bi bi-chat-slash fs-1 d-block mb-3"></i>
+      <h5>Noch keine Chats bekannt</h5>
+      <p class="small">
+        Schreib deinem Bot in einer Gruppe eine Nachricht — er registriert den Chat automatisch.<br>
+        Danach erscheinen hier die Einstellungen pro Chat.
+      </p>
+
+      <!-- Manual chat add -->
+      <form method="POST" class="d-inline-flex gap-2 mt-3 justify-content-center">
+        <input type="hidden" name="action"  value="save_rules">
+        <input type="text"   name="chat_id" class="form-control form-control-sm" style="width:200px"
+               placeholder="Chat-ID manuell" required>
+        <button type="submit" class="btn btn-primary btn-sm">Chat hinzufügen</button>
+      </form>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

@@ -33,6 +33,7 @@ from telegram.ext import (
 
 from configs.config import TOKEN
 from database.db_operations import DatabaseManager
+from scheduler.scheduler import check_and_send_scheduled
 from utils.location_handler import (
     handle_location,
     get_weather_by_city,
@@ -876,8 +877,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await handle_location(update, context)
         return
 
-    # Register chat in DB for broadcast
-    db.register_chat(message.chat_id)
+    # Register chat in DB for broadcast / web dropdown
+    db.register_chat(
+        message.chat_id,
+        title=message.chat.title or message.chat.first_name or "",
+        chat_type=message.chat.type or "",
+    )
 
 
 # ─────────────────────────────────────────────
@@ -885,6 +890,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ─────────────────────────────────────────────
 
 async def post_init(application: Application):
+    # Start scheduler: check every 60 s for due messages
+    application.job_queue.run_repeating(
+        check_and_send_scheduled,
+        interval=60,
+        first=10,
+        name="message_scheduler",
+    )
+    logger.info("Nachrichten-Scheduler gestartet (Intervall: 60s)")
+
     commands = [
         ("start", "Bot starten"),
         ("help", "Alle Befehle anzeigen"),
