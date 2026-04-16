@@ -196,8 +196,8 @@ HELP_TEXT = (
     "/setrules – Gruppenregeln setzen\n"
     "/setwelcome – Willkommensnachricht setzen\n"
     "/broadcast – Nachricht senden\n"
-    "/whitelist [typ] – User whitelisten\n"
-    "/removefromwhitelist [typ] – Entfernen\n"
+    "/whitelist – User whitelisten (Reply)\n"
+    "/removefromwhitelist – User entfernen (Reply)\n"
 )
 
 ADMIN_HELP_TEXT = (
@@ -214,9 +214,9 @@ ADMIN_HELP_TEXT = (
     "<b>/setrules</b> – Neue Regeln eingeben\n"
     "<b>/setwelcome</b> – Neue Willkommensnachricht\n"
     "  Variablen: {name}, {id}, {chat}\n"
-    "<b>/broadcast</b> – Nachricht an alle\n"
-    "<b>/whitelist</b> frau|mann|sozialmedia|parascha|info\n"
-    "<b>/removefromwhitelist</b> – Selbe Kategorien\n"
+    "<b>/broadcast</b> – Nachricht an alle Chats\n"
+    "<b>/whitelist</b> – User whitelisten (auf Nachricht antworten)\n"
+    "<b>/removefromwhitelist</b> – User aus Whitelist entfernen\n"
 )
 
 
@@ -711,36 +711,18 @@ async def cmd_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #  Whitelist management
 # ─────────────────────────────────────────────
 
-WHITELIST_MAPPING = {
-    "frau": ("whitelistfemale", "Frauen-Whitelist"),
-    "mann": ("whitelistmale", "Manner-Whitelist"),
-    "sozialmedia": ("whitelistsozialmedia", "SozialMedia-Whitelist"),
-    "parascha": ("whitelistparascha", "Parascha-Whitelist"),
-    "info": ("whitelistinfo", "Info-Whitelist"),
-}
-
-
 async def cmd_whitelist(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await _admin_check(update, context):
         return
-    if not context.args:
+    if not update.message.reply_to_message:
         await update.message.reply_text(
-            "Verwendung: /whitelist [frau|mann|sozialmedia|parascha|info]\n"
-            "Antworte dabei auf die Nachricht des Users."
+            "Antworte auf eine Nachricht des Users, den du whitelisten möchtest."
         )
         return
-    cat = context.args[0].lower()
-    if cat not in WHITELIST_MAPPING:
-        await update.message.reply_text(f"Unbekannte Kategorie: {cat}")
-        return
-    if not update.message.reply_to_message:
-        await update.message.reply_text("Antworte auf eine Nachricht des zu whitelistenden Users.")
-        return
     target = update.message.reply_to_message.from_user
-    table, label = WHITELIST_MAPPING[cat]
-    db.save_list_to_table(table, [target.id])
+    db.add_to_whitelist(target.id)
     msg = await update.message.reply_text(
-        f"{_mention(target)} zur {label} hinzugefugt.",
+        f"{_mention(target)} wurde zur Whitelist hinzugefügt.",
         parse_mode=ParseMode.HTML,
     )
     await asyncio.sleep(8)
@@ -754,23 +736,15 @@ async def cmd_whitelist(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cmd_remove_whitelist(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await _admin_check(update, context):
         return
-    if not context.args:
+    if not update.message.reply_to_message:
         await update.message.reply_text(
-            "Verwendung: /removefromwhitelist [frau|mann|sozialmedia|parascha|info]"
+            "Antworte auf eine Nachricht des Users, den du entfernen möchtest."
         )
         return
-    cat = context.args[0].lower()
-    if cat not in WHITELIST_MAPPING:
-        await update.message.reply_text(f"Unbekannte Kategorie: {cat}")
-        return
-    if not update.message.reply_to_message:
-        await update.message.reply_text("Antworte auf eine Nachricht des Users.")
-        return
     target = update.message.reply_to_message.from_user
-    table, label = WHITELIST_MAPPING[cat]
-    db.remove_from_list(table, target.id)
+    db.remove_from_whitelist(target.id)
     msg = await update.message.reply_text(
-        f"{_mention(target)} aus der {label} entfernt.",
+        f"{_mention(target)} wurde von der Whitelist entfernt.",
         parse_mode=ParseMode.HTML,
     )
     await asyncio.sleep(8)

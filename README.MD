@@ -9,7 +9,7 @@ Telegram-Gruppen-Verwaltungsbot mit Web-Interface, Nachrichten-Planer, Standort/
 | Bereich | Features |
 |---|---|
 | **Moderation** | Ban, Unban, Kick, Mute, Unmute, Warn (Auto-Ban bei 3x), Unwarn |
-| **Whitelist** | 5 Kategorien (Frauen, Männer, SozialMedia, Parascha, Info) |
+| **Whitelist** | User zur Gruppen-Whitelist hinzufügen / entfernen |
 | **Standort** | Standort teilen → Karte + Adresse + Wetter + OpenStreetMap/Google Maps |
 | **Wetter** | `/weather [Ort]` — live via wttr.in (kein API-Key nötig) |
 | **Nachrichten-Planer** | Text, Bild, Video, Datei, Audio; Telegram-Buttons; täglich/wöchentlich/monatlich |
@@ -68,13 +68,6 @@ TOKEN = 'DEIN_BOT_TOKEN_HIER'        # Token von @BotFather
 WEB_PORT       = 5000                 # Port (Standard: 5000)
 WEB_PASSWORD   = 'sicheres_passwort' # Login-Passwort für das Web-Interface
 WEB_SECRET_KEY = 'zufaelliger_key'   # Beliebige zufällige Zeichenkette
-
-# Gruppen-Topic-Namen (so wie sie in deiner Gruppe heißen)
-GENERAL_CHAT_MESSAGE_ID    = "Parasha"
-SOZIALMEDIA_CHAT_MESSAGE_ID = "Social Media"
-MALE_CHAT_MESSAGE_ID       = "Männer Gruppe"
-FEMALE_CHAT_MESSAGE_ID     = "Frauen Gruppe"
-INFO_CHAT_MESSAGE_ID       = "Infos"
 ```
 
 > **Sicherheitshinweis:** Committe `config.py` niemals mit echtem Token in ein öffentliches Repository!
@@ -119,7 +112,7 @@ Login mit dem Passwort aus `configs/config.py` → `WEB_PASSWORD`.
 | Neue Nachricht | `/messages/add` | Nachricht planen (Text/Bild/Video/Datei/Audio) |
 | Vorlagen | `/templates` | Nachrichten-Vorlagen verwalten |
 | Einstellungen | `/settings` | Regeln & Willkommensnachrichten pro Gruppe |
-| Whitelist | `/whitelist` | Alle Kategorien verwalten |
+| Whitelist | `/whitelist` | Whitelist verwalten |
 | Verwarnungen | `/warnings` | Verwarnungen anzeigen und zurücksetzen |
 
 ---
@@ -167,8 +160,8 @@ Login mit dem Passwort aus `configs/config.py` → `WEB_PASSWORD`.
 | `/unpin` | Alle Pins entfernen |
 | `/setrules` | Gruppenregeln setzen |
 | `/setwelcome` | Willkommensnachricht setzen (Variablen: `{name}`, `{id}`, `{chat}`) |
-| `/whitelist [typ]` | User whitelisten (frau/mann/sozialmedia/parascha/info) |
-| `/removefromwhitelist [typ]` | User entfernen |
+| `/whitelist` | User whitelisten (Reply auf Nachricht) |
+| `/removefromwhitelist` | User von Whitelist entfernen (Reply) |
 | `/broadcast` | Nachricht an alle Chats senden |
 
 ---

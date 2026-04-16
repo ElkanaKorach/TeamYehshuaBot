@@ -52,13 +52,6 @@ ALLOWED_EXTENSIONS = {
 
 db = DatabaseManager()
 
-WHITELIST_CATEGORIES = {
-    "frau":        ("whitelistfemale",      "Frauen"),
-    "mann":        ("whitelistmale",        "Männer"),
-    "sozialmedia": ("whitelistsozialmedia", "Social Media"),
-    "parascha":    ("whitelistparascha",    "Parascha"),
-    "info":        ("whitelistinfo",        "Info"),
-}
 
 MSG_TYPES = ["text", "photo", "video", "document", "audio"]
 
@@ -479,48 +472,35 @@ def settings():
 @app.route("/whitelist")
 @login_required
 def whitelist():
-    data = {
-        cat: {"label": label, "members": db.get_list(table)}
-        for cat, (table, label) in WHITELIST_CATEGORIES.items()
-    }
-    return render_template("whitelist.html", data=data, categories=WHITELIST_CATEGORIES)
+    members = db.get_whitelist()
+    return render_template("whitelist.html", members=members)
 
 
 @app.route("/whitelist/add", methods=["POST"])
 @login_required
 def whitelist_add():
-    cat     = request.form.get("category", "").lower()
     user_id = request.form.get("user_id", "").strip()
-    if cat not in WHITELIST_CATEGORIES:
-        flash("Unbekannte Kategorie.", "danger")
-        return redirect(url_for("whitelist"))
     try:
         uid = int(user_id)
     except ValueError:
         flash("Ungültige User-ID.", "danger")
         return redirect(url_for("whitelist"))
-    table, label = WHITELIST_CATEGORIES[cat]
-    db.save_list_to_table(table, [uid])
-    flash(f"User {uid} zur {label}-Whitelist hinzugefügt.", "success")
+    db.add_to_whitelist(uid)
+    flash(f"User {uid} zur Whitelist hinzugefügt.", "success")
     return redirect(url_for("whitelist"))
 
 
 @app.route("/whitelist/remove", methods=["POST"])
 @login_required
 def whitelist_remove():
-    cat     = request.form.get("category", "").lower()
     user_id = request.form.get("user_id", "").strip()
-    if cat not in WHITELIST_CATEGORIES:
-        flash("Unbekannte Kategorie.", "danger")
-        return redirect(url_for("whitelist"))
     try:
         uid = int(user_id)
     except ValueError:
         flash("Ungültige User-ID.", "danger")
         return redirect(url_for("whitelist"))
-    table, label = WHITELIST_CATEGORIES[cat]
-    db.remove_from_list(table, uid)
-    flash(f"User {uid} aus der {label}-Whitelist entfernt.", "warning")
+    db.remove_from_whitelist(uid)
+    flash(f"User {uid} aus der Whitelist entfernt.", "warning")
     return redirect(url_for("whitelist"))
 
 

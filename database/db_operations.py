@@ -34,16 +34,8 @@ class DatabaseManager:
         with self.create_connection() as conn:
             c = conn.cursor()
 
-            # Whitelist tables
-            for tbl in (
-                "whitelistsozialmedia",
-                "whitelistmale",
-                "whitelistfemale",
-                "whitelistparascha",
-                "whitelistprojekte",
-                "whitelistinfo",
-            ):
-                c.execute(f"CREATE TABLE IF NOT EXISTS {tbl} (userid INTEGER PRIMARY KEY)")
+            # Single whitelist table
+            c.execute("CREATE TABLE IF NOT EXISTS whitelist (userid INTEGER PRIMARY KEY)")
 
             # Warnings
             c.execute("""
@@ -121,33 +113,29 @@ class DatabaseManager:
     #  Whitelist
     # ─────────────────────────────────────────
 
-    def get_list(self, table_name: str) -> list:
+    def get_whitelist(self) -> list:
         with self.create_connection() as conn:
             c = conn.cursor()
-            c.execute(f"SELECT userid FROM {table_name}")
+            c.execute("SELECT userid FROM whitelist ORDER BY userid")
             return [row[0] for row in c.fetchall()]
 
-    def save_list_to_table(self, table_name: str, user_ids: list):
+    def add_to_whitelist(self, user_id: int):
         with self.create_connection() as conn:
             c = conn.cursor()
-            for uid in user_ids:
-                try:
-                    c.execute(f"INSERT OR IGNORE INTO {table_name} (userid) VALUES (?)", (uid,))
-                except Exception as e:
-                    logger.error(f"Insert {table_name} uid={uid}: {e}")
+            c.execute("INSERT OR IGNORE INTO whitelist (userid) VALUES (?)", (user_id,))
             conn.commit()
 
-    def remove_from_list(self, table_name: str, user_id: int):
+    def remove_from_whitelist(self, user_id: int):
         with self.create_connection() as conn:
             c = conn.cursor()
-            c.execute(f"DELETE FROM {table_name} WHERE userid = ?", (user_id,))
+            c.execute("DELETE FROM whitelist WHERE userid = ?", (user_id,))
             conn.commit()
 
-    def clear_list_table(self, table_name: str):
+    def is_whitelisted(self, user_id: int) -> bool:
         with self.create_connection() as conn:
             c = conn.cursor()
-            c.execute(f"DELETE FROM {table_name}")
-            conn.commit()
+            c.execute("SELECT 1 FROM whitelist WHERE userid = ?", (user_id,))
+            return c.fetchone() is not None
 
     # ─────────────────────────────────────────
     #  Warnings

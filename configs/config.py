@@ -1,12 +1,8 @@
-TOKEN = '6942337491:AAGVKMvHayewt5CUcNFg8xx_zprobgJ4jak'  # Bot-Token
-MESSAGE_LIMIT_PER_MIN = 5           # Spam Counter
-GENERAL_CHAT_MESSAGE_ID = "Parasha"             # Parascha gruppe
-SOZIALMEDIA_CHAT_MESSAGE_ID = "Social Media"    # Sozial Media Gruppe
-MALE_CHAT_MESSAGE_ID = "Männer Gruppe"          # Männer Gruppe
-FEMALE_CHAT_MESSAGE_ID = "Frauen Gruppe"        # Frauen Gruppe
-INFO_CHAT_MESSAGE_ID = "Infos"                  # INFO Gruppe
+TOKEN = 'DEIN_BOT_TOKEN_HIER'     # Token von @BotFather
+
+MESSAGE_LIMIT_PER_MIN = 5        # Anti-Spam: max Nachrichten pro Minute
 
 # ── Web-Interface ────────────────────────────
-WEB_PORT       = 5000             # Port für das Web-Interface
-WEB_PASSWORD   = "admin"          # << BITTE ÄNDERN vor Produktion
-WEB_SECRET_KEY = "change-me-in-production-please"  # Flask session key
+WEB_PORT       = 5000
+WEB_PASSWORD   = "admin"         # << BITTE ÄNDERN vor Produktion
+WEB_SECRET_KEY = "change-me-in-production-please"
