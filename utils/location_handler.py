@@ -163,7 +163,7 @@ async def _reverse_geocode(lat: float, lon: float) -> str:
         f"https://nominatim.openstreetmap.org/reverse"
         f"?lat={lat}&lon={lon}&format=json&accept-language=de"
     )
-    headers = {"User-Agent": "TeamYehshuaBot/1.0"}
+    headers = {"User-Agent": "NazarenerBot/1.0"}
     try:
         async with httpx.AsyncClient(timeout=HTTP_TIMEOUT, follow_redirects=True) as client:
             resp = await client.get(url, headers=headers)

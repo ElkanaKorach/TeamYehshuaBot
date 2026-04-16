@@ -1,4 +1,4 @@
-# TeamYehshua Bot
+# Nazarener Bot
 
 Telegram-Gruppen-Verwaltungsbot mit Web-Interface, Nachrichten-Planer, Standort/Wetter und vollständiger Moderations-Suite.
 
@@ -34,6 +34,9 @@ Telegram-Gruppen-Verwaltungsbot mit Web-Interface, Nachrichten-Planer, Standort/
 ```bash
 git clone https://github.com/ElkanaKorach/TeamYehshuaBot.git
 cd TeamYehshuaBot
+# Oder wenn das Repo umbenannt wurde:
+# git clone https://github.com/ElkanaKorach/NazarenerBot.git
+# cd NazarenerBot
 ```
 
 ### 2. Virtuelle Umgebung erstellen und aktivieren
@@ -175,13 +178,13 @@ Login mit dem Passwort aus `configs/config.py` → `WEB_PASSWORD`.
 Damit der Bot nach einem Neustart automatisch startet:
 
 ```bash
-sudo nano /etc/systemd/system/teamyehshua.service
+sudo nano /etc/systemd/system/nazarener.service
 ```
 
 Inhalt:
 ```ini
 [Unit]
-Description=TeamYehshua Telegram Bot
+Description=Nazarener Telegram Bot
 After=network.target
 
 [Service]
@@ -197,11 +200,11 @@ WantedBy=multi-user.target
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable teamyehshua
-sudo systemctl start teamyehshua
+sudo systemctl enable nazarener
+sudo systemctl start nazarener
 
 # Status prüfen
-sudo systemctl status teamyehshua
+sudo systemctl status nazarener
 ```
 
 ---
@@ -209,13 +212,13 @@ sudo systemctl status teamyehshua
 ## Mit Docker (optional)
 
 ```bash
-docker build -t teamyehshua-bot .
+docker build -t nazarener-bot .
 docker run -d \
-  --name teamyehshua \
+  --name nazarener \
   -p 5000:5000 \
   -v $(pwd)/local_db.sqlite3:/app/local_db.sqlite3 \
   -v $(pwd)/web/uploads:/app/web/uploads \
-  teamyehshua-bot
+  nazarener-bot
 ```
 
 ---
@@ -223,7 +226,7 @@ docker run -d \
 ## Projektstruktur
 
 ```
-TeamYehshuaBot/
+NazarenerBot/
 ├── run.py                  ← Startpunkt (Bot + Web zusammen)
 ├── channel_help_bot.py     ← Telegram-Bot (alle Befehle)
 ├── configs/
@@ -246,4 +249,4 @@ TeamYehshuaBot/
 
 ## Lizenz
 
-Privat / Intern — TeamYehshua
+Privat / Intern — Nazarener

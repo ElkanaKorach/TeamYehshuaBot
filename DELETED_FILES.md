@@ -72,7 +72,7 @@ These individual handler files were integrated into the unified `channel_help_bo
 
 ### Before (Deleted Structure)
 ```
-TeamYehshuaBot/
+NazarenerBot/
 ├── main.py / main_bot.py          ← Separate bot implementations
 ├── test.py / tester.py             ← Debug scripts
 ├── utils/
@@ -96,7 +96,7 @@ TeamYehshuaBot/
 
 ### After (Current Structure)
 ```
-TeamYehshuaBot/
+NazarenerBot/
 ├── run.py                          ← Unified entry point
 ├── channel_help_bot.py             ← Single, consolidated bot
 ├── configs/
