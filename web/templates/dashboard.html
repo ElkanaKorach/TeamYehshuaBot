@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% set now = now %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  {% set cards = [
+    ("Ausstehend",  stats.pending,   "bi-hourglass-split",  "warning",  "#fff3cd"),
+    ("Gesendet",    stats.sent,      "bi-check-circle",     "success",  "#d1e7dd"),
+    ("Fehler",      stats.failed,    "bi-x-circle",         "danger",   "#f8d7da"),
+    ("Chats",       stats.chats,     "bi-people",           "primary",  "#cfe2ff"),
+  ] %}
+  {% for label, value, icon, color, bg in cards %}
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="icon" style="background:{{ bg }}; color:var(--bs-{{ color }});">
+        <i class="bi {{ icon }}"></i>
+      </div>
+      <div class="value">{{ value }}</div>
+      <div class="label">{{ label }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-3">
+  <!-- Recent scheduled messages -->
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <span class="fw-semibold"><i class="bi bi-calendar-check me-2 text-primary"></i>Zuletzt geplante Nachrichten</span>
+        <a href="{{ url_for('add_message') }}" class="btn btn-sm btn-primary">
+          <i class="bi bi-plus"></i> Neue
+        </a>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>#</th><th>Typ</th><th>Chat</th><th>Geplant für</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in recent %}
+            <tr onclick="location.href='{{ url_for('view_message', msg_id=m.id) }}'" style="cursor:pointer">
+              <td class="text-muted small">{{ m.id }}</td>
+              <td><span class="badge bg-light text-dark border">{{ m.message_type }}</span></td>
+              <td class="small"><code>{{ m.chat_id }}</code></td>
+              <td class="small">{{ m.scheduled_at | dt_format }}</td>
+              <td>{{ m.status | status_badge | safe }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-4">Keine geplanten Nachrichten</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer bg-white text-end">
+        <a href="{{ url_for('messages') }}" class="text-decoration-none small">Alle anzeigen →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Registered chats + recent warnings -->
+  <div class="col-lg-4">
+    <div class="card mb-3">
+      <div class="card-header bg-white py-3">
+        <span class="fw-semibold"><i class="bi bi-people me-2 text-info"></i>Bekannte Chats</span>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for c in chats[:6] %}
+        <li class="list-group-item d-flex justify-content-between small py-2">
+          <span>{{ c.title or "–" }}</span>
+          <code class="text-muted">{{ c.chat_id }}</code>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted text-center py-3">Noch keine Chats</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header bg-white py-3">
+        <span class="fw-semibold"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Verwarnungen</span>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for w in warnings %}
+        <li class="list-group-item d-flex justify-content-between small py-2">
+          <span>User <code>{{ w.user_id }}</code></span>
+          <span class="badge bg-warning text-dark">{{ w.cnt }}x</span>
+        </li>
+        {% else %}
+        <li class="list-group-item text-muted text-center py-3">Keine Verwarnungen</li>
+        {% endfor %}
+      </ul>
+      <div class="card-footer bg-white text-end">
+        <a href="{{ url_for('warnings_page') }}" class="text-decoration-none small">Alle →</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Inject current datetime for topbar
+document.querySelector('.topbar small').innerHTML =
+  '<i class="bi bi-clock me-1"></i>' + new Date().toLocaleString('de-DE');
+</script>
+{% endblock %}

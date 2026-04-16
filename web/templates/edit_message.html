@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% block title %}Nachricht #{{ msg.id }} bearbeiten{% endblock %}
+{% block page_title %}Nachricht #{{ msg.id }} bearbeiten{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+  .type-btn { cursor:pointer; border:2px solid #dee2e6; border-radius:10px; padding:14px 8px;
+              text-align:center; transition:.2s; }
+  .type-btn:hover, .type-btn.active { border-color:#0d6efd; background:#e7f1ff; }
+  .type-btn i { font-size:1.6rem; display:block; margin-bottom:4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-9">
+<form method="POST" enctype="multipart/form-data">
+  <input type="hidden" name="buttons_json" id="buttons_json_input" value="{{ msg.buttons_json or '' }}">
+
+  <!-- Chat -->
+  <div class="card mb-4">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold"><i class="bi bi-chat-dots me-2 text-primary"></i>Ziel-Chat</span>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Bekannte Chats</label>
+          <select class="form-select" onchange="document.getElementById('chat_id_input').value=this.value">
+            <option value="">— auswählen —</option>
+            {% for c in chats %}
+            <option value="{{ c.chat_id }}" {{ 'selected' if c.chat_id == msg.chat_id }}>
+              {{ c.title or c.chat_id }} ({{ c.chat_id }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Chat-ID</label>
+          <input type="text" class="form-control" name="chat_id" id="chat_id_input"
+                 value="{{ msg.chat_id }}" required>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Type -->
+  <div class="card mb-4">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold"><i class="bi bi-layout-text-window me-2 text-primary"></i>Typ</span>
+    </div>
+    <div class="card-body">
+      <input type="hidden" name="message_type" id="message_type_input" value="{{ msg.message_type }}">
+      <div class="row g-2">
+        {% for t, icon, label in [
+          ('text','bi-chat-text','Text'),('photo','bi-image','Bild'),
+          ('video','bi-camera-video','Video'),('document','bi-file-earmark','Datei'),
+          ('audio','bi-music-note','Audio')] %}
+        <div class="col-4 col-sm-2">
+          <div class="type-btn {{ 'active' if msg.message_type == t }}"
+               onclick="selectType('{{ t }}', this)">
+            <i class="bi {{ icon }}"></i><small>{{ label }}</small>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="card mb-4">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold"><i class="bi bi-pencil-square me-2 text-primary"></i>Inhalt</span>
+    </div>
+    <div class="card-body">
+      <div id="section-text" {{ 'style="display:none"' if msg.message_type != 'text' | safe }}>
+        <label class="form-label fw-semibold">Text</label>
+        <textarea class="form-control font-monospace" name="content" rows="6">{{ msg.content or '' }}</textarea>
+      </div>
+      <div id="section-media" {{ '' if msg.message_type != 'text' else 'style="display:none"' | safe }}>
+        <label class="form-label fw-semibold">Caption</label>
+        <textarea class="form-control" name="caption" rows="3">{{ msg.caption or '' }}</textarea>
+        <hr>
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Neue Datei hochladen</label>
+            <input type="file" class="form-control" name="media_file">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">URL</label>
+            <input type="url" class="form-control" name="media_url" value="{{ msg.media_url or '' }}">
+          </div>
+        </div>
+        <div class="row g-3 mt-1">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Telegram File-ID</label>
+            <input type="text" class="form-control" name="media_file_id" value="{{ msg.media_file_id or '' }}">
+          </div>
+          {% if msg.media_local_path %}
+          <div class="col-md-6 d-flex align-items-end">
+            <div class="alert alert-info py-2 mb-0 small w-100">
+              <i class="bi bi-paperclip me-1"></i>Aktuell: <code>{{ msg.media_local_path }}</code>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="card mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between">
+      <span class="fw-semibold"><i class="bi bi-ui-checks me-2 text-primary"></i>Buttons</span>
+      <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRow()">
+        <i class="bi bi-plus"></i> Zeile
+      </button>
+    </div>
+    <div class="card-body">
+      <div id="button-builder"></div>
+      <pre id="buttons-preview" class="bg-light p-2 rounded small mt-3">{{ msg.buttons_json or '[]' }}</pre>
+    </div>
+  </div>
+
+  <!-- Schedule + Repeat -->
+  <div class="card mb-4">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold"><i class="bi bi-clock me-2 text-primary"></i>Zeitpunkt &amp; Wiederholung</span>
+    </div>
+    <div class="card-body row g-3">
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Datum &amp; Uhrzeit</label>
+        <input type="text" class="form-control" name="scheduled_at" id="datetime_picker"
+               value="{{ msg.scheduled_at }}" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Wiederholung</label>
+        <select name="repeat" class="form-select">
+          {% for val, label in repeat_options %}
+          <option value="{{ val }}" {{ 'selected' if msg.get('repeat', 'none') == val }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-3">
+    <button type="submit" class="btn btn-primary btn-lg px-5">
+      <i class="bi bi-save me-2"></i>Änderungen speichern
+    </button>
+    <a href="{{ url_for('view_message', msg_id=msg.id) }}" class="btn btn-outline-secondary btn-lg">Abbrechen</a>
+  </div>
+</form>
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/de.js"></script>
+<script>
+flatpickr("#datetime_picker", {
+  locale:"de", enableTime:true, time_24hr:true,
+  dateFormat:"Y-m-d\\TH:i", altInput:true, altFormat:"d.m.Y H:i"
+});
+
+function selectType(type, el) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('message_type_input').value = type;
+  document.getElementById('section-text').style.display  = type === 'text' ? '' : 'none';
+  document.getElementById('section-media').style.display = type !== 'text' ? '' : 'none';
+}
+
+// ── Button builder (same as add_message) ──────────────────
+let rowCount = 0;
+function addRow() {
+  rowCount++;
+  const id = 'row-' + rowCount;
+  const div = document.createElement('div');
+  div.className = 'border rounded p-2 mb-2 bg-light';
+  div.id = id;
+  div.innerHTML = `
+    <div class="d-flex justify-content-between mb-2">
+      <small class="fw-semibold text-muted">Zeile ${rowCount}</small>
+      <div>
+        <button type="button" class="btn btn-xs btn-outline-primary btn-sm me-1" onclick="addBtn('${id}')">+ Button</button>
+        <button type="button" class="btn btn-xs btn-outline-danger btn-sm" onclick="this.closest('#${id}').remove(); updateJSON()">✕</button>
+      </div>
+    </div>
+    <div class="btn-list row g-1"></div>`;
+  document.getElementById('button-builder').appendChild(div);
+  addBtn(id);
+  updateJSON();
+}
+
+function addBtn(rowId) {
+  const bId = rowId + '-b-' + Date.now();
+  const list = document.querySelector('#' + rowId + ' .btn-list');
+  const col  = document.createElement('div');
+  col.className = 'col-md-6'; col.id = bId;
+  col.innerHTML = `
+    <div class="border rounded p-2 bg-white">
+      <div class="row g-1 mb-1">
+        <div class="col"><input type="text" class="form-control form-control-sm btn-text" placeholder="Text" oninput="updateJSON()"></div>
+        <div class="col-auto"><button type="button" class="btn btn-sm btn-outline-danger" onclick="document.getElementById('${bId}').remove();updateJSON()">✕</button></div>
+      </div>
+      <select class="form-select form-select-sm btn-type mb-1" onchange="this.nextElementSibling.placeholder=this.value==='url'?'https://…':'callback'; updateJSON()">
+        <option value="url">URL</option><option value="callback">Callback</option>
+      </select>
+      <input type="text" class="form-control form-control-sm btn-value" placeholder="https://…" oninput="updateJSON()">
+    </div>`;
+  list.appendChild(col);
+  updateJSON();
+}
+
+function updateJSON() {
+  const rows = document.querySelectorAll('#button-builder > div');
+  const result = [];
+  rows.forEach(row => {
+    const btns = [];
+    row.querySelectorAll('[id^=' + row.id + '-b]').forEach(b => {
+      const text  = b.querySelector('.btn-text')?.value?.trim();
+      const type  = b.querySelector('.btn-type')?.value;
+      const value = b.querySelector('.btn-value')?.value?.trim();
+      if (text && value)
+        btns.push(type === 'url' ? {text,url:value} : {text,callback_data:value});
+    });
+    if (btns.length) result.push(btns);
+  });
+  document.getElementById('buttons_json_input').value = result.length ? JSON.stringify(result) : '';
+  document.getElementById('buttons-preview').textContent = JSON.stringify(result, null, 2) || '[]';
+}
+
+// Pre-load existing buttons
+(function() {
+  const raw = {{ msg.buttons_json | tojson if msg.buttons_json else '""' }};
+  if (!raw) return;
+  try {
+    const rows = JSON.parse(raw);
+    rows.forEach(rowBtns => {
+      addRow();
+      const rowEl = document.querySelector('#button-builder > div:last-child');
+      const rowId = rowEl.id;
+      // Remove auto-added empty button
+      rowEl.querySelector('[id^=' + rowId + '-b]')?.remove();
+      rowBtns.forEach(btn => {
+        addBtn(rowId);
+        const bEl = rowEl.querySelector('[id^=' + rowId + '-b]:last-child');
+        bEl.querySelector('.btn-text').value  = btn.text || '';
+        bEl.querySelector('.btn-type').value  = btn.url ? 'url' : 'callback';
+        bEl.querySelector('.btn-value').value = btn.url || btn.callback_data || '';
+      });
+    });
+    updateJSON();
+  } catch(e) {}
+})();
+</script>
+{% endblock %}

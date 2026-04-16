@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Nachricht #{{ msg.id }}{% endblock %}
+{% block page_title %}Nachricht #{{ msg.id }} — Details{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+<div class="col-lg-7">
+  <div class="card mb-3">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">
+        <i class="bi bi-info-circle me-2 text-primary"></i>Details
+      </span>
+      {{ msg.status | status_badge | safe }}
+    </div>
+    <div class="card-body">
+      <table class="table table-borderless small mb-0">
+        <tr><th style="width:160px" class="text-muted">ID</th><td><code>{{ msg.id }}</code></td></tr>
+        <tr><th class="text-muted">Typ</th><td><span class="badge bg-light text-dark border">{{ msg.message_type }}</span></td></tr>
+        <tr><th class="text-muted">Chat-ID</th><td><code>{{ msg.chat_id }}</code></td></tr>
+        <tr><th class="text-muted">Geplant für</th><td><strong>{{ msg.scheduled_at | dt_format }}</strong></td></tr>
+        <tr><th class="text-muted">Wiederholung</th><td>
+          {% set rep = msg.get('repeat','none') or 'none' %}
+          {% if rep != 'none' %}
+          <span class="badge bg-info text-dark">{{ repeat_options.get(rep, rep) }}</span>
+          {% else %}
+          <span class="text-muted">Einmalig</span>
+          {% endif %}
+        </td></tr>
+        <tr><th class="text-muted">Erstellt</th><td>{{ msg.created_at | dt_format }}</td></tr>
+        {% if msg.sent_at %}
+        <tr><th class="text-muted">Gesendet</th><td>{{ msg.sent_at | dt_format }}</td></tr>
+        {% endif %}
+        {% if msg.error_message %}
+        <tr><th class="text-muted">Fehler</th><td class="text-danger">{{ msg.error_message }}</td></tr>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+
+  {% if msg.content %}
+  <div class="card mb-3">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold"><i class="bi bi-chat-text me-2"></i>Text</span>
+    </div>
+    <div class="card-body">
+      <pre class="mb-0" style="white-space:pre-wrap">{{ msg.content }}</pre>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if msg.caption %}
+  <div class="card mb-3">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold"><i class="bi bi-card-text me-2"></i>Caption</span>
+    </div>
+    <div class="card-body">
+      <pre class="mb-0" style="white-space:pre-wrap">{{ msg.caption }}</pre>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if msg.media_url or msg.media_file_id or msg.media_local_path %}
+  <div class="card mb-3">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold"><i class="bi bi-paperclip me-2"></i>Medium</span>
+    </div>
+    <div class="card-body small">
+      {% if msg.media_url %}<div><strong>URL:</strong> <a href="{{ msg.media_url }}" target="_blank">{{ msg.media_url }}</a></div>{% endif %}
+      {% if msg.media_file_id %}<div><strong>File-ID:</strong> <code>{{ msg.media_file_id }}</code></div>{% endif %}
+      {% if msg.media_local_path %}<div><strong>Lokaler Pfad:</strong> <code>{{ msg.media_local_path }}</code></div>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if msg.buttons_json %}
+  <div class="card mb-3">
+    <div class="card-header bg-white py-3">
+      <span class="fw-semibold"><i class="bi bi-ui-checks me-2"></i>Buttons</span>
+    </div>
+    <div class="card-body">
+      {% set btns = msg.buttons_json | tojson %}
+      <div id="btn-preview"></div>
+      <pre class="bg-light p-2 rounded small mt-2">{{ msg.buttons_json }}</pre>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('messages') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>Zurück
+    </a>
+    {% if msg.status == 'pending' %}
+    <a href="{{ url_for('edit_message', msg_id=msg.id) }}" class="btn btn-primary">
+      <i class="bi bi-pencil me-1"></i>Bearbeiten
+    </a>
+    {% endif %}
+    <form method="POST" action="{{ url_for('duplicate_message', msg_id=msg.id) }}" style="margin:0">
+      <button class="btn btn-outline-info">
+        <i class="bi bi-copy me-1"></i>Duplizieren
+      </button>
+    </form>
+    {% if msg.status == 'pending' %}
+    <form method="POST" action="{{ url_for('cancel_message', msg_id=msg.id) }}" style="margin:0">
+      <button class="btn btn-warning" onclick="return confirm('Abbrechen?')">
+        <i class="bi bi-stop-circle me-1"></i>Abbrechen
+      </button>
+    </form>
+    {% endif %}
+    <form method="POST" action="{{ url_for('delete_message', msg_id=msg.id) }}" style="margin:0">
+      <button class="btn btn-danger" onclick="return confirm('Löschen?')">
+        <i class="bi bi-trash me-1"></i>Löschen
+      </button>
+    </form>
+  </div>
+</div>
+</div>
+
+{% if msg.buttons_json %}
+<script>
+try {
+  const rows = JSON.parse({{ msg.buttons_json | tojson }});
+  const container = document.getElementById('btn-preview');
+  rows.forEach(row => {
+    const div = document.createElement('div');
+    div.className = 'd-flex gap-2 mb-2 flex-wrap';
+    row.forEach(btn => {
+      const b = document.createElement('a');
+      b.className = 'btn btn-outline-primary btn-sm';
+      b.textContent = btn.text;
+      if (btn.url) { b.href = btn.url; b.target = '_blank'; }
+      div.appendChild(b);
+    });
+    container.appendChild(div);
+  });
+} catch(e) {}
+</script>
+{% endif %}
+{% endblock %}

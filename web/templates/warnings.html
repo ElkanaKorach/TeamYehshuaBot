@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Verwarnungen{% endblock %}
+{% block page_title %}Verwarnungen{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header bg-white py-3">
+    <span class="fw-semibold">
+      <i class="bi bi-exclamation-triangle me-2 text-warning"></i>
+      Alle Verwarnungen
+    </span>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>User-ID</th>
+          <th>Chat-ID</th>
+          <th>Anzahl</th>
+          <th>Letzter Grund</th>
+          <th>Aktion</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for w in warnings %}
+        <tr>
+          <td><code>{{ w.user_id }}</code></td>
+          <td><code>{{ w.chat_id }}</code></td>
+          <td>
+            <span class="badge {{ 'bg-danger' if w.cnt >= 3 else ('bg-warning text-dark' if w.cnt == 2 else 'bg-secondary') }}">
+              {{ w.cnt }} / 3
+            </span>
+          </td>
+          <td class="small text-muted">{{ w.last_reason or '–' }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('reset_warnings') }}"
+                  style="display:inline">
+              <input type="hidden" name="user_id" value="{{ w.user_id }}">
+              <button class="btn btn-sm btn-outline-warning"
+                      onclick="return confirm('Alle Verwarnungen für {{ w.user_id }} zurücksetzen?')">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Zurücksetzen
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="text-center text-muted py-5">
+            <i class="bi bi-check-circle fs-2 d-block mb-2 text-success"></i>
+            Keine Verwarnungen vorhanden
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
