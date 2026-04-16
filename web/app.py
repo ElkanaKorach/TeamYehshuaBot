@@ -1,5 +1,5 @@
 """
-TeamYehshua Bot — Web Interface (Flask)
+Nazarener Bot — Web Interface (Flask)
 Läuft parallel zum Telegram-Bot (via run.py).
 """
 

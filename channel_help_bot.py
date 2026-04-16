@@ -1,5 +1,5 @@
 """
-TeamYehshua Channel Help Bot
+Nazarener Channel Help Bot
 Comprehensive Telegram Group Management Bot inspired by @channelhelp
 Features: Moderation, Location, Weather, Welcome, Anti-Spam, Inline Menus
 """
@@ -146,7 +146,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     text = (
         f"Schalom {_mention(user)}! \n\n"
-        "<b>TeamYehshua Bot</b> – dein Gruppen-Assistent.\n\n"
+        "<b>Nazarener Bot</b> – dein Gruppen-Assistent.\n\n"
         "<b>Funktionen:</b>\n"
         "• Moderation (Ban / Mute / Warn)\n"
         "• Standort, Wetter & Uhrzeit\n"
