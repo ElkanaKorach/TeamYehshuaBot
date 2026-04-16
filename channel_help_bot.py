@@ -33,7 +33,7 @@ from telegram.ext import (
 
 from configs.config import TOKEN
 from database.db_operations import DatabaseManager
-from scheduler.scheduler import check_and_send_scheduled
+from scheduler.scheduler import check_and_send_scheduled, send_scheduled_message
 from utils.location_handler import (
     handle_location,
     get_weather_by_city,
@@ -62,9 +62,14 @@ BOT_ADMINS = [1082436365, 1438346474]
 MAX_WARNINGS = 3
 
 # ConversationHandler states
-AWAITING_RULES = 1
-AWAITING_WELCOME = 2
+AWAITING_RULES     = 1
+AWAITING_WELCOME   = 2
 AWAITING_BROADCAST = 3
+# /schedule states
+SCH_TYPE    = 10
+SCH_CONTENT = 11
+SCH_TIME    = 12
+SCH_CONFIRM = 13
 
 
 # ─────────────────────────────────────────────
@@ -863,6 +868,172 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ─────────────────────────────────────────────
+#  /schedule — ConversationHandler (plan a message from Telegram)
+# ─────────────────────────────────────────────
+
+_SCH_TYPES = {"text": "Text", "photo": "Bild", "video": "Video",
+              "document": "Datei", "audio": "Audio"}
+
+async def cmd_schedule_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Entry point: ask for message type."""
+    keyboard = [
+        [InlineKeyboardButton(label, callback_data=f"sch_type:{key}")]
+        for key, label in _SCH_TYPES.items()
+    ]
+    await update.message.reply_text(
+        "<b>Nachricht planen</b>\n\nWelchen Typ soll die Nachricht haben?",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.HTML,
+    )
+    return SCH_TYPE
+
+
+async def sch_type_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    msg_type = query.data.split(":")[1]
+    context.user_data["sch_type"] = msg_type
+    context.user_data["sch_chat"] = query.message.chat_id
+
+    if msg_type == "text":
+        await query.edit_message_text("Sende jetzt den <b>Text</b> der Nachricht (HTML erlaubt).\n/cancel zum Abbrechen.",
+                                      parse_mode=ParseMode.HTML)
+    else:
+        await query.edit_message_text(f"Sende jetzt das <b>{_SCH_TYPES[msg_type]}</b> (optional mit Caption).\n/cancel zum Abbrechen.",
+                                      parse_mode=ParseMode.HTML)
+    return SCH_CONTENT
+
+
+async def sch_content_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg      = update.message
+    msg_type = context.user_data.get("sch_type", "text")
+
+    if msg_type == "text":
+        context.user_data["sch_content"] = msg.text
+        context.user_data["sch_caption"] = None
+        context.user_data["sch_file_id"] = None
+    else:
+        context.user_data["sch_content"] = None
+        context.user_data["sch_caption"] = msg.caption
+
+        file_obj = None
+        if msg.photo:
+            file_obj = msg.photo[-1]
+        elif msg.video:
+            file_obj = msg.video
+        elif msg.document:
+            file_obj = msg.document
+        elif msg.audio:
+            file_obj = msg.audio
+
+        if not file_obj:
+            await msg.reply_text("Bitte sende die passende Mediendatei.")
+            return SCH_CONTENT
+        context.user_data["sch_file_id"] = file_obj.file_id
+
+    await msg.reply_text(
+        "Wann soll die Nachricht gesendet werden?\n"
+        "Format: <code>YYYY-MM-DD HH:MM</code> (z.B. <code>2025-01-31 09:00</code>)\n"
+        "/cancel zum Abbrechen.",
+        parse_mode=ParseMode.HTML,
+    )
+    return SCH_TIME
+
+
+async def sch_time_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.strip()
+    try:
+        from datetime import datetime as _dt
+        dt = _dt.fromisoformat(text.replace(" ", "T")[:16])
+        scheduled_at = dt.strftime("%Y-%m-%dT%H:%M")
+    except ValueError:
+        await update.message.reply_text(
+            "Ungültiges Format. Bitte <code>YYYY-MM-DD HH:MM</code> verwenden.",
+            parse_mode=ParseMode.HTML,
+        )
+        return SCH_TIME
+
+    context.user_data["sch_time"] = scheduled_at
+    ud = context.user_data
+    preview = ud.get("sch_content") or ud.get("sch_caption") or f"[{ud.get('sch_type')} Datei]"
+
+    keyboard = [
+        [InlineKeyboardButton("Bestätigen", callback_data="sch_confirm:yes"),
+         InlineKeyboardButton("Abbrechen",  callback_data="sch_confirm:no")]
+    ]
+    await update.message.reply_text(
+        f"<b>Zusammenfassung:</b>\n"
+        f"Typ: {_SCH_TYPES.get(ud['sch_type'], ud['sch_type'])}\n"
+        f"Zeit: {scheduled_at}\n"
+        f"Vorschau: {preview[:100]}\n\n"
+        "Nachricht planen?",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.HTML,
+    )
+    return SCH_CONFIRM
+
+
+async def sch_confirm(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    choice = query.data.split(":")[1]
+
+    if choice == "no":
+        await query.edit_message_text("Abgebrochen.")
+        context.user_data.clear()
+        return ConversationHandler.END
+
+    ud = context.user_data
+    msg_id = db.add_scheduled_message(
+        chat_id       = ud["sch_chat"],
+        message_type  = ud["sch_type"],
+        scheduled_at  = ud["sch_time"],
+        content       = ud.get("sch_content"),
+        caption       = ud.get("sch_caption"),
+        media_file_id = ud.get("sch_file_id"),
+    )
+    db.register_chat(ud["sch_chat"])
+    await query.edit_message_text(
+        f"Nachricht <b>#{msg_id}</b> geplant für <code>{ud['sch_time']}</code>.",
+        parse_mode=ParseMode.HTML,
+    )
+    context.user_data.clear()
+    return ConversationHandler.END
+
+
+async def cmd_schedules(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """List pending scheduled messages for this chat."""
+    chat_id = update.effective_chat.id
+    all_msgs = db.get_scheduled_messages(status="pending")
+    chat_msgs = [m for m in all_msgs if m["chat_id"] == chat_id]
+
+    if not chat_msgs:
+        await update.message.reply_text("Keine ausstehenden Nachrichten für diesen Chat.")
+        return
+
+    lines = [f"<b>Geplante Nachrichten ({len(chat_msgs)}):</b>"]
+    for m in chat_msgs[:10]:
+        rep = m.get("repeat", "none") or "none"
+        rep_label = {"daily": " 🔁tägl.", "weekly": " 🔁wöch.", "monthly": " 🔁mtl."}.get(rep, "")
+        lines.append(f"• #{m['id']} — {m['message_type']} — {m['scheduled_at']}{rep_label}")
+    await update.message.reply_text("\n".join(lines), parse_mode=ParseMode.HTML)
+
+
+async def cmd_cancelschedule(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Cancel a scheduled message: /cancelschedule <id>"""
+    if not context.args:
+        await update.message.reply_text("Verwendung: /cancelschedule <ID>")
+        return
+    try:
+        msg_id = int(context.args[0])
+    except ValueError:
+        await update.message.reply_text("Ungültige ID.")
+        return
+    db.cancel_scheduled_message(msg_id)
+    await update.message.reply_text(f"Nachricht #{msg_id} abgebrochen.")
+
+
+# ─────────────────────────────────────────────
 #  General message handler (anti-spam / topic check)
 # ─────────────────────────────────────────────
 
@@ -925,6 +1096,9 @@ async def post_init(application: Application):
         ("setwelcome", "[Admin] Willkommensnachricht setzen"),
         ("whitelist", "[Admin] User whitelisten"),
         ("removefromwhitelist", "[Admin] User entwhitelisten"),
+        ("schedule", "Nachricht planen"),
+        ("schedules", "Geplante Nachrichten anzeigen"),
+        ("cancelschedule", "Geplante Nachricht abbrechen"),
     ]
     await application.bot.set_my_commands(commands)
 
@@ -987,10 +1161,25 @@ def main():
     app.add_handler(CommandHandler("whitelist", cmd_whitelist))
     app.add_handler(CommandHandler("removefromwhitelist", cmd_remove_whitelist))
 
+    # /schedule conversation
+    schedule_conv = ConversationHandler(
+        entry_points=[CommandHandler("schedule", cmd_schedule_start)],
+        states={
+            SCH_TYPE:    [CallbackQueryHandler(sch_type_chosen,    pattern=r"^sch_type:")],
+            SCH_CONTENT: [MessageHandler(filters.ALL & ~filters.COMMAND, sch_content_received)],
+            SCH_TIME:    [MessageHandler(filters.TEXT & ~filters.COMMAND, sch_time_received)],
+            SCH_CONFIRM: [CallbackQueryHandler(sch_confirm, pattern=r"^sch_confirm:")],
+        },
+        fallbacks=[CommandHandler("cancel", cmd_cancel)],
+    )
+
     # Conversations
     app.add_handler(setrules_conv)
     app.add_handler(setwelcome_conv)
     app.add_handler(broadcast_conv)
+    app.add_handler(schedule_conv)
+    app.add_handler(CommandHandler("schedules",      cmd_schedules))
+    app.add_handler(CommandHandler("cancelschedule", cmd_cancelschedule))
 
     # Inline buttons
     app.add_handler(CallbackQueryHandler(button_callback))

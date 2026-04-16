@@ -18,6 +18,14 @@
         <tr><th class="text-muted">Typ</th><td><span class="badge bg-light text-dark border">{{ msg.message_type }}</span></td></tr>
         <tr><th class="text-muted">Chat-ID</th><td><code>{{ msg.chat_id }}</code></td></tr>
         <tr><th class="text-muted">Geplant für</th><td><strong>{{ msg.scheduled_at | dt_format }}</strong></td></tr>
+        <tr><th class="text-muted">Wiederholung</th><td>
+          {% set rep = msg.get('repeat','none') or 'none' %}
+          {% if rep != 'none' %}
+          <span class="badge bg-info text-dark">{{ repeat_options.get(rep, rep) }}</span>
+          {% else %}
+          <span class="text-muted">Einmalig</span>
+          {% endif %}
+        </td></tr>
         <tr><th class="text-muted">Erstellt</th><td>{{ msg.created_at | dt_format }}</td></tr>
         {% if msg.sent_at %}
         <tr><th class="text-muted">Gesendet</th><td>{{ msg.sent_at | dt_format }}</td></tr>
@@ -77,18 +85,28 @@
   </div>
   {% endif %}
 
-  <div class="d-flex gap-2">
+  <div class="d-flex gap-2 flex-wrap">
     <a href="{{ url_for('messages') }}" class="btn btn-outline-secondary">
       <i class="bi bi-arrow-left me-1"></i>Zurück
     </a>
     {% if msg.status == 'pending' %}
-    <form method="POST" action="{{ url_for('cancel_message', msg_id=msg.id) }}">
+    <a href="{{ url_for('edit_message', msg_id=msg.id) }}" class="btn btn-primary">
+      <i class="bi bi-pencil me-1"></i>Bearbeiten
+    </a>
+    {% endif %}
+    <form method="POST" action="{{ url_for('duplicate_message', msg_id=msg.id) }}" style="margin:0">
+      <button class="btn btn-outline-info">
+        <i class="bi bi-copy me-1"></i>Duplizieren
+      </button>
+    </form>
+    {% if msg.status == 'pending' %}
+    <form method="POST" action="{{ url_for('cancel_message', msg_id=msg.id) }}" style="margin:0">
       <button class="btn btn-warning" onclick="return confirm('Abbrechen?')">
         <i class="bi bi-stop-circle me-1"></i>Abbrechen
       </button>
     </form>
     {% endif %}
-    <form method="POST" action="{{ url_for('delete_message', msg_id=msg.id) }}">
+    <form method="POST" action="{{ url_for('delete_message', msg_id=msg.id) }}" style="margin:0">
       <button class="btn btn-danger" onclick="return confirm('Löschen?')">
         <i class="bi bi-trash me-1"></i>Löschen
       </button>

@@ -146,8 +146,14 @@ async def check_and_send_scheduled(context: ContextTypes.DEFAULT_TYPE):
     for msg in due:
         try:
             await send_scheduled_message(context.bot, msg)
-            db.mark_message_sent(msg["id"])
-            logger.info(f"Nachricht #{msg['id']} gesendet")
+            repeat = msg.get("repeat", "none") or "none"
+            if repeat != "none":
+                # Advance to next occurrence instead of marking sent
+                db.reschedule_recurring(msg["id"], repeat)
+                logger.info(f"Nachricht #{msg['id']} (repeat={repeat}) neu geplant")
+            else:
+                db.mark_message_sent(msg["id"])
+                logger.info(f"Nachricht #{msg['id']} gesendet")
         except Exception as e:
             logger.error(f"Nachricht #{msg['id']} fehlgeschlagen: {e}")
             db.mark_message_failed(msg["id"], str(e))

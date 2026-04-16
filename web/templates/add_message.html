@@ -20,6 +20,29 @@
 <form method="POST" enctype="multipart/form-data" id="mainForm">
   <input type="hidden" name="buttons_json" id="buttons_json_input">
 
+  <!-- Step 0: Load Template (optional) -->
+  {% if templates %}
+  <div class="card mb-4 border-warning">
+    <div class="card-header bg-warning bg-opacity-10 py-3">
+      <span class="fw-semibold"><i class="bi bi-collection me-2 text-warning"></i>Vorlage laden <small class="text-muted">(optional)</small></span>
+    </div>
+    <div class="card-body d-flex gap-3 align-items-center">
+      <select id="tpl_select" class="form-select" style="max-width:320px">
+        <option value="">— Vorlage auswählen —</option>
+        {% for t in templates %}
+        <option value="{{ t.id }}">{{ t.name }} ({{ t.message_type }})</option>
+        {% endfor %}
+      </select>
+      <button type="button" class="btn btn-warning" onclick="loadTemplate()">
+        <i class="bi bi-download me-1"></i>Laden
+      </button>
+      <a href="{{ url_for('templates_page') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-gear me-1"></i>Vorlagen verwalten
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Step 1: Chat -->
   <div class="card mb-4">
     <div class="card-header bg-white py-3">
@@ -143,25 +166,33 @@
     </div>
   </div>
 
-  <!-- Step 5: Schedule -->
+  <!-- Step 5: Schedule + Repeat -->
   <div class="card mb-4">
     <div class="card-header bg-white py-3">
-      <span class="fw-semibold"><i class="bi bi-clock me-2 text-primary"></i>5. Zeitpunkt</span>
+      <span class="fw-semibold"><i class="bi bi-clock me-2 text-primary"></i>5. Zeitpunkt &amp; Wiederholung</span>
     </div>
     <div class="card-body">
       <div class="row g-3">
-        <div class="col-md-6">
+        <div class="col-md-5">
           <label class="form-label fw-semibold">Datum &amp; Uhrzeit</label>
           <input type="text" class="form-control form-control-lg" name="scheduled_at"
                  id="datetime_picker" placeholder="TT.MM.JJJJ HH:MM" required>
-          <div class="form-text">Zeitzone: Server-Lokalzeit (UTC)</div>
+          <div class="form-text">Zeitzone: Server-Lokalzeit</div>
         </div>
-        <div class="col-md-6 d-flex align-items-end">
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Wiederholung</label>
+          <select name="repeat" class="form-select form-select-lg">
+            {% for val, label in repeat_options %}
+            <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
           <div class="row g-2 w-100">
-            {% for label, delta in [('In 1h','1h'),('In 6h','6h'),('Morgen','24h'),('In 1 Woche','168h')] %}
+            {% for label, delta in [('In 1h','1'),('In 6h','6'),('Morgen','24'),('In 1W','168')] %}
             <div class="col-6">
               <button type="button" class="btn btn-outline-secondary w-100 btn-sm"
-                      onclick="setRelativeTime('{{ delta }}')">{{ label }}</button>
+                      onclick="setRelativeTime({{ delta }})">{{ label }}</button>
             </div>
             {% endfor %}
           </div>
@@ -197,10 +228,8 @@ const fp = flatpickr("#datetime_picker", {
   minDate: "today",
 });
 
-function setRelativeTime(delta) {
-  const h = parseInt(delta);
-  const d = new Date(Date.now() + h * 3600000);
-  fp.setDate(d);
+function setRelativeTime(hours) {
+  fp.setDate(new Date(Date.now() + hours * 3600000));
 }
 
 // ── Chat sync ────────────────────────────────────────────
@@ -316,5 +345,36 @@ function updateJSON() {
 document.getElementById('mainForm').addEventListener('submit', () => {
   updateJSON();
 });
+
+// ── Template loader ──────────────────────────────────────
+async function loadTemplate() {
+  const id = document.getElementById('tpl_select').value;
+  if (!id) return;
+  try {
+    const resp = await fetch(`/api/templates/${id}`);
+    const tpl  = await resp.json();
+    if (!tpl.id) return;
+
+    // Set type
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    const typeEl = document.querySelector(`.type-btn[onclick*="'${tpl.message_type}'"]`);
+    if (typeEl) selectType(tpl.message_type, typeEl);
+
+    // Set content
+    const ta = document.querySelector('textarea[name="content"]');
+    if (ta && tpl.content) ta.value = tpl.content;
+    const cap = document.querySelector('textarea[name="caption"]');
+    if (cap && tpl.caption) cap.value = tpl.caption;
+
+    // Set buttons
+    if (tpl.buttons_json) {
+      document.getElementById('buttons_json_input').value = tpl.buttons_json;
+      document.getElementById('buttons-preview').textContent = JSON.stringify(JSON.parse(tpl.buttons_json), null, 2);
+    }
+    alert('Vorlage geladen!');
+  } catch(e) {
+    alert('Fehler beim Laden der Vorlage.');
+  }
+}
 </script>
 {% endblock %}

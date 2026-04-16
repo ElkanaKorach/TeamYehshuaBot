@@ -10,7 +10,9 @@ from functools import wraps
 
 from flask import (
     Flask,
+    Markup,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -27,7 +29,6 @@ from database.db_operations import DatabaseManager
 
 app = Flask(__name__)
 
-# Configs aus configs/config.py laden
 try:
     from configs.config import WEB_PASSWORD, WEB_SECRET_KEY, WEB_PORT
 except ImportError:
@@ -42,8 +43,12 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024  # 50 MB
 
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4", "mov", "avi",
-                      "mp3", "ogg", "pdf", "zip", "docx", "txt"}
+ALLOWED_EXTENSIONS = {
+    "png", "jpg", "jpeg", "gif", "webp",
+    "mp4", "mov", "avi", "mkv",
+    "mp3", "ogg", "m4a",
+    "pdf", "zip", "docx", "txt",
+}
 
 db = DatabaseManager()
 
@@ -57,8 +62,24 @@ WHITELIST_CATEGORIES = {
 
 MSG_TYPES = ["text", "photo", "video", "document", "audio"]
 
+REPEAT_OPTIONS = [
+    ("none",    "Einmalig"),
+    ("daily",   "Täglich"),
+    ("weekly",  "Wöchentlich"),
+    ("monthly", "Monatlich"),
+]
+
 # ─────────────────────────────────────────────
-#  Auth
+#  Context processor — injects `now` into every template
+# ─────────────────────────────────────────────
+
+@app.context_processor
+def inject_globals():
+    return {"now": datetime.now().strftime("%d.%m.%Y %H:%M")}
+
+
+# ─────────────────────────────────────────────
+#  Auth helpers
 # ─────────────────────────────────────────────
 
 def login_required(f):
@@ -121,7 +142,7 @@ def dashboard():
 
 
 # ─────────────────────────────────────────────
-#  Scheduled Messages
+#  Scheduled Messages — list
 # ─────────────────────────────────────────────
 
 @app.route("/messages")
@@ -138,81 +159,200 @@ def messages():
     )
 
 
+# ─────────────────────────────────────────────
+#  Shared helper: build message from form
+# ─────────────────────────────────────────────
+
+def _parse_message_form():
+    """Parse the add/edit form. Returns (data_dict, error_string or None)."""
+    chat_id       = request.form.get("chat_id", "").strip()
+    msg_type      = request.form.get("message_type", "text")
+    content       = request.form.get("content", "").strip()
+    caption       = request.form.get("caption", "").strip()
+    media_url     = request.form.get("media_url", "").strip()
+    media_file_id = request.form.get("media_file_id", "").strip()
+    scheduled_at  = request.form.get("scheduled_at", "").strip()
+    buttons_raw   = request.form.get("buttons_json", "").strip()
+    repeat        = request.form.get("repeat", "none")
+
+    if not chat_id:
+        return None, "Bitte Chat-ID angeben."
+    if not scheduled_at:
+        return None, "Bitte Datum/Uhrzeit angeben."
+    if msg_type == "text" and not content:
+        return None, "Text darf nicht leer sein."
+
+    # Normalise datetime
+    try:
+        dt = datetime.fromisoformat(scheduled_at.replace(" ", "T")[:16])
+        scheduled_at = dt.strftime("%Y-%m-%dT%H:%M")
+    except ValueError:
+        return None, "Ungültiges Datumsformat (YYYY-MM-DDTHH:MM erwartet)."
+
+    # Validate buttons JSON
+    buttons_json = None
+    if buttons_raw:
+        try:
+            parsed = json.loads(buttons_raw)
+            buttons_json = json.dumps(parsed)
+        except json.JSONDecodeError:
+            return None, "Ungültiges Button-JSON."
+
+    # Handle file upload
+    media_local_path = None
+    uploaded = request.files.get("media_file")
+    if uploaded and uploaded.filename:
+        if not allowed_file(uploaded.filename):
+            return None, "Dateiformat nicht erlaubt."
+        fname = secure_filename(uploaded.filename)
+        save_path = os.path.join(app.config["UPLOAD_FOLDER"], fname)
+        uploaded.save(save_path)
+        media_local_path = save_path
+
+    return {
+        "chat_id":          int(chat_id),
+        "message_type":     msg_type,
+        "content":          content or None,
+        "caption":          caption or None,
+        "media_url":        media_url or None,
+        "media_file_id":    media_file_id or None,
+        "media_local_path": media_local_path,
+        "buttons_json":     buttons_json,
+        "scheduled_at":     scheduled_at,
+        "repeat":           repeat if repeat in ("none", "daily", "weekly", "monthly") else "none",
+    }, None
+
+
+# ─────────────────────────────────────────────
+#  Add Message
+# ─────────────────────────────────────────────
+
 @app.route("/messages/add", methods=["GET", "POST"])
 @login_required
 def add_message():
+    chats     = db.get_all_chats()
+    templates = db.get_templates()
+
+    if request.method == "POST":
+        data, err = _parse_message_form()
+        if err:
+            flash(err, "danger")
+            return render_template(
+                "add_message.html", chats=chats, msg_types=MSG_TYPES,
+                repeat_options=REPEAT_OPTIONS, templates=templates,
+            )
+
+        msg_id = db.add_scheduled_message(**data)
+        db.register_chat(data["chat_id"])
+        flash(f"Nachricht #{msg_id} geplant für {data['scheduled_at']}.", "success")
+        return redirect(url_for("messages"))
+
+    # Pre-fill from template if ?tpl=ID
+    prefill = {}
+    tpl_id = request.args.get("tpl")
+    if tpl_id:
+        tpl = db.get_template(int(tpl_id))
+        if tpl:
+            prefill = tpl
+
+    return render_template(
+        "add_message.html",
+        chats=chats,
+        msg_types=MSG_TYPES,
+        repeat_options=REPEAT_OPTIONS,
+        templates=templates,
+        prefill=prefill,
+    )
+
+
+# ─────────────────────────────────────────────
+#  Edit Message
+# ─────────────────────────────────────────────
+
+@app.route("/messages/<int:msg_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_message(msg_id):
+    msg = db.get_scheduled_message(msg_id)
+    if not msg:
+        flash("Nachricht nicht gefunden.", "danger")
+        return redirect(url_for("messages"))
+    if msg["status"] != "pending":
+        flash("Nur ausstehende Nachrichten können bearbeitet werden.", "warning")
+        return redirect(url_for("view_message", msg_id=msg_id))
+
     chats = db.get_all_chats()
 
     if request.method == "POST":
-        chat_id      = request.form.get("chat_id", "").strip()
-        msg_type     = request.form.get("message_type", "text")
-        content      = request.form.get("content", "").strip()
-        caption      = request.form.get("caption", "").strip()
-        media_url    = request.form.get("media_url", "").strip()
-        media_file_id = request.form.get("media_file_id", "").strip()
-        scheduled_at = request.form.get("scheduled_at", "").strip()
-        buttons_raw  = request.form.get("buttons_json", "").strip()
-
-        # Validation
-        if not chat_id:
-            flash("Bitte Chat-ID angeben.", "danger")
-            return render_template("add_message.html", chats=chats, msg_types=MSG_TYPES)
-        if not scheduled_at:
-            flash("Bitte Datum/Uhrzeit angeben.", "danger")
-            return render_template("add_message.html", chats=chats, msg_types=MSG_TYPES)
-        if msg_type == "text" and not content:
-            flash("Text darf nicht leer sein.", "danger")
-            return render_template("add_message.html", chats=chats, msg_types=MSG_TYPES)
-
-        # Normalize datetime to ISO format YYYY-MM-DDTHH:MM
-        try:
-            dt = datetime.fromisoformat(scheduled_at.replace(" ", "T")[:16])
-            scheduled_at = dt.strftime("%Y-%m-%dT%H:%M")
-        except ValueError:
-            flash("Ungültiges Datumsformat.", "danger")
-            return render_template("add_message.html", chats=chats, msg_types=MSG_TYPES)
-
-        # Validate/normalize buttons JSON
-        buttons_json = None
-        if buttons_raw:
-            try:
-                parsed = json.loads(buttons_raw)
-                buttons_json = json.dumps(parsed)
-            except json.JSONDecodeError:
-                flash("Ungültiges Button-JSON.", "danger")
-                return render_template("add_message.html", chats=chats, msg_types=MSG_TYPES)
-
-        # Handle file upload
-        media_local_path = None
-        uploaded = request.files.get("media_file")
-        if uploaded and uploaded.filename:
-            if not allowed_file(uploaded.filename):
-                flash("Dateiformat nicht erlaubt.", "danger")
-                return render_template("add_message.html", chats=chats, msg_types=MSG_TYPES)
-            fname = secure_filename(uploaded.filename)
-            save_path = os.path.join(app.config["UPLOAD_FOLDER"], fname)
-            uploaded.save(save_path)
-            media_local_path = save_path
-
-        msg_id = db.add_scheduled_message(
-            chat_id          = int(chat_id),
-            message_type     = msg_type,
-            scheduled_at     = scheduled_at,
-            content          = content or None,
-            caption          = caption or None,
-            media_url        = media_url or None,
-            media_file_id    = media_file_id or None,
-            media_local_path = media_local_path,
-            buttons_json     = buttons_json,
+        data, err = _parse_message_form()
+        if err:
+            flash(err, "danger")
+            return render_template(
+                "edit_message.html", msg=msg, chats=chats,
+                msg_types=MSG_TYPES, repeat_options=REPEAT_OPTIONS,
+            )
+        db.update_scheduled_message(
+            msg_id=msg_id,
+            chat_id=data["chat_id"],
+            message_type=data["message_type"],
+            scheduled_at=data["scheduled_at"],
+            content=data["content"],
+            caption=data["caption"],
+            media_url=data["media_url"],
+            media_file_id=data["media_file_id"],
+            buttons_json=data["buttons_json"],
+            repeat=data["repeat"],
         )
+        flash(f"Nachricht #{msg_id} aktualisiert.", "success")
+        return redirect(url_for("view_message", msg_id=msg_id))
 
-        # Register chat so it shows in dropdowns
-        db.register_chat(int(chat_id), chat_id)
+    return render_template(
+        "edit_message.html",
+        msg=msg,
+        chats=chats,
+        msg_types=MSG_TYPES,
+        repeat_options=REPEAT_OPTIONS,
+    )
 
-        flash(f"Nachricht #{msg_id} geplant für {scheduled_at}.", "success")
+
+# ─────────────────────────────────────────────
+#  Duplicate Message
+# ─────────────────────────────────────────────
+
+@app.route("/messages/<int:msg_id>/duplicate", methods=["POST"])
+@login_required
+def duplicate_message(msg_id):
+    msg = db.get_scheduled_message(msg_id)
+    if not msg:
+        flash("Nachricht nicht gefunden.", "danger")
         return redirect(url_for("messages"))
+    new_id = db.add_scheduled_message(
+        chat_id          = msg["chat_id"],
+        message_type     = msg["message_type"],
+        scheduled_at     = msg["scheduled_at"],
+        content          = msg["content"],
+        caption          = msg["caption"],
+        media_url        = msg["media_url"],
+        media_file_id    = msg["media_file_id"],
+        media_local_path = msg["media_local_path"],
+        buttons_json     = msg["buttons_json"],
+        repeat           = msg.get("repeat", "none"),
+    )
+    flash(f"Nachricht #{msg_id} als #{new_id} dupliziert. Bitte Zeitpunkt anpassen.", "info")
+    return redirect(url_for("edit_message", msg_id=new_id))
 
-    return render_template("add_message.html", chats=chats, msg_types=MSG_TYPES)
+
+# ─────────────────────────────────────────────
+#  View / Cancel / Delete Message
+# ─────────────────────────────────────────────
+
+@app.route("/messages/<int:msg_id>")
+@login_required
+def view_message(msg_id):
+    msg = db.get_scheduled_message(msg_id)
+    if not msg:
+        flash("Nachricht nicht gefunden.", "danger")
+        return redirect(url_for("messages"))
+    return render_template("view_message.html", msg=msg, repeat_options=dict(REPEAT_OPTIONS))
 
 
 @app.route("/messages/<int:msg_id>/cancel", methods=["POST"])
@@ -231,14 +371,64 @@ def delete_message(msg_id):
     return redirect(url_for("messages"))
 
 
-@app.route("/messages/<int:msg_id>")
+# ─────────────────────────────────────────────
+#  Templates
+# ─────────────────────────────────────────────
+
+@app.route("/templates")
 @login_required
-def view_message(msg_id):
-    msg = db.get_scheduled_message(msg_id)
-    if not msg:
-        flash("Nachricht nicht gefunden.", "danger")
-        return redirect(url_for("messages"))
-    return render_template("view_message.html", msg=msg)
+def templates_page():
+    templates = db.get_templates()
+    return render_template("templates.html", templates=templates, msg_types=MSG_TYPES)
+
+
+@app.route("/templates/add", methods=["POST"])
+@login_required
+def template_add():
+    name         = request.form.get("name", "").strip()
+    msg_type     = request.form.get("message_type", "text")
+    content      = request.form.get("content", "").strip()
+    caption      = request.form.get("caption", "").strip()
+    buttons_raw  = request.form.get("buttons_json", "").strip()
+
+    if not name:
+        flash("Name darf nicht leer sein.", "danger")
+        return redirect(url_for("templates_page"))
+
+    buttons_json = None
+    if buttons_raw:
+        try:
+            buttons_json = json.dumps(json.loads(buttons_raw))
+        except json.JSONDecodeError:
+            flash("Ungültiges Button-JSON.", "danger")
+            return redirect(url_for("templates_page"))
+
+    db.add_template(
+        name=name,
+        message_type=msg_type,
+        content=content or None,
+        caption=caption or None,
+        buttons_json=buttons_json,
+    )
+    flash(f"Vorlage '{name}' gespeichert.", "success")
+    return redirect(url_for("templates_page"))
+
+
+@app.route("/templates/<int:tpl_id>/delete", methods=["POST"])
+@login_required
+def template_delete(tpl_id):
+    db.delete_template(tpl_id)
+    flash("Vorlage gelöscht.", "warning")
+    return redirect(url_for("templates_page"))
+
+
+@app.route("/api/templates/<int:tpl_id>")
+@login_required
+def api_template(tpl_id):
+    tpl = db.get_template(tpl_id)
+    if not tpl:
+        return jsonify({}), 404
+    return jsonify(tpl)
 
 
 # ─────────────────────────────────────────────
@@ -252,33 +442,33 @@ def settings():
 
     if request.method == "POST":
         action = request.form.get("action")
-
         if action == "save_rules":
             chat_id = request.form.get("chat_id")
-            rules   = request.form.get("rules", "")
             if chat_id:
-                db.set_setting(int(chat_id), "rules", rules)
+                db.set_setting(int(chat_id), "rules", request.form.get("rules", ""))
                 flash("Regeln gespeichert.", "success")
-
         elif action == "save_welcome":
-            chat_id  = request.form.get("chat_id")
-            welcome  = request.form.get("welcome", "")
+            chat_id = request.form.get("chat_id")
             if chat_id:
-                db.set_setting(int(chat_id), "welcome", welcome)
+                db.set_setting(int(chat_id), "welcome", request.form.get("welcome", ""))
                 flash("Willkommensnachricht gespeichert.", "success")
-
+        elif action == "add_chat":
+            chat_id = request.form.get("chat_id", "").strip()
+            try:
+                db.register_chat(int(chat_id))
+                flash(f"Chat {chat_id} hinzugefügt.", "success")
+            except ValueError:
+                flash("Ungültige Chat-ID.", "danger")
         return redirect(url_for("settings"))
 
-    # Build per-chat settings for display
-    chat_settings = []
-    for chat in chats:
-        cid = chat["chat_id"]
-        chat_settings.append({
-            "chat":    chat,
-            "rules":   db.get_setting(cid, "rules"),
-            "welcome": db.get_setting(cid, "welcome"),
-        })
-
+    chat_settings = [
+        {
+            "chat":    c,
+            "rules":   db.get_setting(c["chat_id"], "rules"),
+            "welcome": db.get_setting(c["chat_id"], "welcome"),
+        }
+        for c in chats
+    ]
     return render_template("settings.html", chat_settings=chat_settings, chats=chats)
 
 
@@ -289,12 +479,10 @@ def settings():
 @app.route("/whitelist")
 @login_required
 def whitelist():
-    data = {}
-    for cat, (table, label) in WHITELIST_CATEGORIES.items():
-        data[cat] = {
-            "label":   label,
-            "members": db.get_list(table),
-        }
+    data = {
+        cat: {"label": label, "members": db.get_list(table)}
+        for cat, (table, label) in WHITELIST_CATEGORIES.items()
+    }
     return render_template("whitelist.html", data=data, categories=WHITELIST_CATEGORIES)
 
 
@@ -343,8 +531,7 @@ def whitelist_remove():
 @app.route("/warnings")
 @login_required
 def warnings_page():
-    all_warns = db.get_all_warnings()
-    return render_template("warnings.html", warnings=all_warns)
+    return render_template("warnings.html", warnings=db.get_all_warnings())
 
 
 @app.route("/warnings/reset", methods=["POST"])
@@ -360,18 +547,17 @@ def reset_warnings():
 
 
 # ─────────────────────────────────────────────
-#  API (JSON) — for fetch() calls from JS
+#  JSON API
 # ─────────────────────────────────────────────
 
 @app.route("/api/stats")
 @login_required
 def api_stats():
-    from flask import jsonify
     return jsonify(db.get_stats())
 
 
 # ─────────────────────────────────────────────
-#  Template helpers
+#  Template filters
 # ─────────────────────────────────────────────
 
 @app.template_filter("dt_format")
@@ -379,28 +565,27 @@ def dt_format(value):
     if not value:
         return "–"
     try:
-        dt = datetime.fromisoformat(str(value)[:16])
-        return dt.strftime("%d.%m.%Y %H:%M")
+        return datetime.fromisoformat(str(value)[:16]).strftime("%d.%m.%Y %H:%M")
     except Exception:
         return str(value)
 
 
 @app.template_filter("status_badge")
 def status_badge(status):
-    badges = {
-        "pending":   "warning",
-        "sent":      "success",
-        "failed":    "danger",
-        "cancelled": "secondary",
-    }
-    color = badges.get(status, "light")
-    label = {
-        "pending":   "Ausstehend",
-        "sent":      "Gesendet",
-        "failed":    "Fehler",
-        "cancelled": "Abgebrochen",
-    }.get(status, status)
-    return f'<span class="badge bg-{color}">{label}</span>'
+    colors = {"pending": "warning", "sent": "success",
+               "failed": "danger",  "cancelled": "secondary"}
+    labels = {"pending": "Ausstehend", "sent": "Gesendet",
+               "failed": "Fehler",     "cancelled": "Abgebrochen"}
+    c = colors.get(status, "light")
+    l = labels.get(status, status)
+    return Markup(f'<span class="badge bg-{c}">{l}</span>')
+
+
+@app.template_filter("repeat_label")
+def repeat_label(value):
+    labels = {"none": "Einmalig", "daily": "Täglich",
+               "weekly": "Wöchentlich", "monthly": "Monatlich"}
+    return labels.get(value, value or "Einmalig")
 
 
 if __name__ == "__main__":

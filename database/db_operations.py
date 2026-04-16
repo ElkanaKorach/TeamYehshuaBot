@@ -88,10 +88,29 @@ class DatabaseManager:
                     media_local_path TEXT,
                     buttons_json     TEXT,
                     scheduled_at     TEXT    NOT NULL,
+                    repeat           TEXT    DEFAULT 'none',
                     status           TEXT    DEFAULT 'pending',
                     created_at       TEXT    DEFAULT CURRENT_TIMESTAMP,
                     sent_at          TEXT,
                     error_message    TEXT
+                )
+            """)
+            # Add repeat column to existing installations that lack it
+            try:
+                c.execute("ALTER TABLE scheduled_messages ADD COLUMN repeat TEXT DEFAULT 'none'")
+            except Exception:
+                pass  # column already exists
+
+            # Message templates
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS message_templates (
+                    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name         TEXT    NOT NULL,
+                    message_type TEXT    NOT NULL DEFAULT 'text',
+                    content      TEXT,
+                    caption      TEXT,
+                    buttons_json TEXT,
+                    created_at   TEXT    DEFAULT CURRENT_TIMESTAMP
                 )
             """)
 
@@ -240,6 +259,7 @@ class DatabaseManager:
         media_file_id: str = None,
         media_local_path: str = None,
         buttons_json: str = None,
+        repeat: str = "none",
     ) -> int:
         with self.create_connection() as conn:
             c = conn.cursor()
@@ -247,16 +267,73 @@ class DatabaseManager:
                 """INSERT INTO scheduled_messages
                    (chat_id, message_type, content, caption,
                     media_url, media_file_id, media_local_path,
-                    buttons_json, scheduled_at)
-                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                    buttons_json, scheduled_at, repeat)
+                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
                 (
                     chat_id, message_type, content, caption,
                     media_url, media_file_id, media_local_path,
-                    buttons_json, scheduled_at,
+                    buttons_json, scheduled_at, repeat or "none",
                 ),
             )
             conn.commit()
             return c.lastrowid
+
+    def update_scheduled_message(
+        self,
+        msg_id: int,
+        chat_id: int,
+        message_type: str,
+        scheduled_at: str,
+        content: str = None,
+        caption: str = None,
+        media_url: str = None,
+        media_file_id: str = None,
+        buttons_json: str = None,
+        repeat: str = "none",
+    ):
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute(
+                """UPDATE scheduled_messages SET
+                   chat_id=?, message_type=?, content=?, caption=?,
+                   media_url=?, media_file_id=?, buttons_json=?,
+                   scheduled_at=?, repeat=?
+                   WHERE id=? AND status='pending'""",
+                (
+                    chat_id, message_type, content, caption,
+                    media_url, media_file_id, buttons_json,
+                    scheduled_at, repeat or "none", msg_id,
+                ),
+            )
+            conn.commit()
+
+    def reschedule_recurring(self, msg_id: int, repeat: str):
+        """Advance scheduled_at to next occurrence for repeating messages."""
+        from datetime import datetime, timedelta
+        msg = self.get_scheduled_message(msg_id)
+        if not msg:
+            return
+        try:
+            dt = datetime.fromisoformat(msg["scheduled_at"][:16])
+        except Exception:
+            return
+        if repeat == "daily":
+            dt += timedelta(days=1)
+        elif repeat == "weekly":
+            dt += timedelta(weeks=1)
+        elif repeat == "monthly":
+            # Approximate: add 30 days
+            dt += timedelta(days=30)
+        else:
+            return
+        new_dt = dt.strftime("%Y-%m-%dT%H:%M")
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute(
+                "UPDATE scheduled_messages SET scheduled_at=?, status='pending', sent_at=NULL WHERE id=?",
+                (new_dt, msg_id),
+            )
+            conn.commit()
 
     def get_scheduled_messages(self, status: str = None) -> list:
         with self.create_connection() as conn:
@@ -320,6 +397,43 @@ class DatabaseManager:
         with self.create_connection() as conn:
             c = conn.cursor()
             c.execute("DELETE FROM scheduled_messages WHERE id=?", (msg_id,))
+            conn.commit()
+
+    # ─────────────────────────────────────────
+    #  Message Templates
+    # ─────────────────────────────────────────
+
+    def add_template(self, name: str, message_type: str,
+                     content: str = None, caption: str = None,
+                     buttons_json: str = None) -> int:
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute(
+                """INSERT INTO message_templates
+                   (name, message_type, content, caption, buttons_json)
+                   VALUES (?,?,?,?,?)""",
+                (name, message_type, content, caption, buttons_json),
+            )
+            conn.commit()
+            return c.lastrowid
+
+    def get_templates(self) -> list:
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM message_templates ORDER BY name")
+            return [dict(r) for r in c.fetchall()]
+
+    def get_template(self, tpl_id: int) -> dict:
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM message_templates WHERE id=?", (tpl_id,))
+            row = c.fetchone()
+            return dict(row) if row else None
+
+    def delete_template(self, tpl_id: int):
+        with self.create_connection() as conn:
+            c = conn.cursor()
+            c.execute("DELETE FROM message_templates WHERE id=?", (tpl_id,))
             conn.commit()
 
     def get_stats(self) -> dict:

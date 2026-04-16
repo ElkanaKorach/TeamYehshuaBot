@@ -96,6 +96,9 @@
     <a href="{{ url_for('add_message') }}" class="nav-link {% if request.endpoint=='add_message' %}active{% endif %}">
       <i class="bi bi-plus-circle"></i> Neue planen
     </a>
+    <a href="{{ url_for('templates_page') }}" class="nav-link {% if request.endpoint=='templates_page' %}active{% endif %}">
+      <i class="bi bi-collection"></i> Vorlagen
+    </a>
 
     <div class="nav-section">Verwaltung</div>
     <a href="{{ url_for('settings') }}" class="nav-link {% if request.endpoint=='settings' %}active{% endif %}">
